@@ -333,12 +333,18 @@ function candidatos(){
   const porFranja=f.orden.flatMap(sec=>CANALES.filter(c=>c.sec===sec));
   return [...new Set([...vivos,...porFranja].map(c=>c.id))];
 }
-/* Si al entrar el directo elegido está apagado, pasa solo al siguiente (hasta que el usuario toque algo) */
-function saltarSiApagado(src){
-  if(tocado||saltos>8) return; const i=tiles.findIndex(t=>t.src===src); if(i<0) return;
-  const ocupados=tiles.map(t=>t.src); const sig=candidatos().find(c=>!ocupados.includes(c)&&esTwitch(c)&&!probados.has(c));
-  if(!sig) return; probados.add(src); probados.add(sig); saltos++; poner(i,sig);
+/* Si al entrar el directo está apagado, pasa solo al siguiente; si no hay nadie, pone el 24 Horas (hasta que el usuario toque algo) */
+function saltarSiApagado(){}
+function comprobarArranque(){
+  if(tocado||saltos>12) return;
+  const t=tiles[sel]; if(!t||!esTwitch(t.src)||live.has(t.src)) return;
+  probados.add(t.src);
+  const ocupados=tiles.map(x=>x.src);
+  const sig=candidatos().find(c=>esTwitch(c)&&!ocupados.includes(c)&&!probados.has(c));
+  saltos++;
+  if(sig&&saltos<=10) poner(sel,sig); else poner(sel,'tv:rtve24h');
 }
+setInterval(comprobarArranque,5000);
 const probados=new Set();
 function layout(nuevo){
   const prev=tiles.map(t=>t.src);
