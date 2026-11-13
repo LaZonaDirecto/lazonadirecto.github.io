@@ -1,17 +1,6 @@
 {
-  "actualizado": "2026-11-13T10:00:00+01:00",
-  "en_directo": ["ibai", "elxokas", "illojuan"],
-  "momentos": [
-    {
-      "id": "ejemplo-1",
-      "canal": "elxokas",
-      "tema": "Xokas sobre Abascal",
-      "resumen": "Comenta la entrevista de Abascal en La Revuelta",
-      "categoria": "Just Chatting",
-      "multiplicador": 4.6,
-      "clip": "",
-      "hora": "2026-11-13T10:00:00+01:00"
-    }
-  ],
+  "actualizado": "",
+  "en_directo": [],
+  "momentos": [],
   "ultima_hora": null
 }
