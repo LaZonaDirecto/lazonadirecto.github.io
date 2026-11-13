@@ -283,7 +283,7 @@ function avatar(s,cls='av'){const c=canal(s);const ini=esTV(s)?'24h':c.n.replace
   return `<span class="${cls}${esTV(s)?' tv':''}" style="--h:${tono(s)}" aria-hidden="true">${ini}</span>`}
 function plataforma(s){return esTV(s)?'YouTube':esKick(s)?'Kick':'Twitch'}
 function queHace(s){ const c=canal(s); if(esTV(s)) return c.sub; const i=info[s];
-  if(live.has(s)) return i&&i.categoria? i.categoria : 'En directo'; return esKick(s)?'Kick':'Sin conexión'; }
+  if(live.has(s)) return i&&i.categoria? i.categoria : 'En directo'; return esKick(s)?'Canal de Kick':'Sin conexión'; }
 function corto(t){const e=$('#corto');e.textContent=t;e.classList.add('si');clearTimeout(e._h);e._h=setTimeout(()=>e.classList.remove('si'),2600)}
 
 /* ================= Reproductores ================= */
@@ -315,7 +315,7 @@ function pintarMonitor(i){
 }
 function pintarFicha(){
   const s=tiles[sel]?.src; if(!s) return;
-  $('#ficha').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><p>${queHace(s)} · ${plataforma(s)}${n>1?' · se oye este':''}</p></div>`
+  $('#ficha').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><p>${[queHace(s), queHace(s).includes(plataforma(s))?'':plataforma(s), n>1?'se oye este':''].filter(Boolean).join(' · ')}</p></div>`
     + (anterior&&!tiles.some(t=>t.src===anterior)?`<button class="boton volver" id="volver">↩ Volver a ${nombre(anterior)}</button>`:'');
   $('#volver')?.addEventListener('click',()=>{const a=anterior;anterior=tiles[sel].src;poner(sel,a);});
 }
