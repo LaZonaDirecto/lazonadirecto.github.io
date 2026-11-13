@@ -251,7 +251,7 @@ const CANALES = [
   {id:'les',n:'LES · Liga española de LoL',sec:'esports'},{id:'lolesportsla',n:'LoL Esports en español',sec:'esports'},
   {id:'kingsleague',n:'Kings League',sec:'esports'},
   // Noticias
-  {id:'tv:rtve24h',n:'Canal 24 Horas',sec:'noticias',sub:'RTVE · noticias',yt:'UC7QZIf0dta-XPXsp9Hv4dTw'}
+  {id:'tv:rtve24h',n:'Canal 24 Horas',sec:'noticias',sub:'RTVE · noticias',yt:'UC7QZIf0dta-XPXsp9Hv4dTw',video:'b4tE5aKhtlg'}
 ];
 const SECTORES = [
   {id:'ahora',n:'Ahora'},{id:'es',n:'España'},{id:'latam',n:'Latinoamérica'},{id:'esports',n:'Esports y eventos'},{id:'noticias',n:'Noticias'}
@@ -259,7 +259,7 @@ const SECTORES = [
 /* Franjas (hora de España): qué sector suele tener más directos */
 function franja(h=new Date().getHours()){
   if(h>=2&&h<9)  return {id:'madrugada',n:'De madrugada',orden:['latam','esports','noticias','es']};
-  if(h>=9&&h<15) return {id:'manana',n:'Por la mañana',orden:['noticias','esports','es','latam']};
+  if(h>=9&&h<15) return {id:'manana',n:'Por la mañana',orden:['esports','es','latam','noticias']};
   if(h>=15&&h<23)return {id:'tarde',n:'Por la tarde',orden:['es','esports','latam','noticias']};
   return {id:'noche',n:'Por la noche',orden:['es','latam','esports','noticias']};
 }
@@ -288,7 +288,7 @@ function corto(t){const e=$('#corto');e.textContent=t;e.classList.add('si');clea
 
 /* ================= Reproductores ================= */
 function iframe(src,muted){
-  if(esTV(src)) return `https://www.youtube.com/embed/live_stream?channel=${canal(src).yt}&autoplay=1&mute=${muted?1:0}`;
+  if(esTV(src)){const c=canal(src);const v=(info[src]&&info[src].video)||c.video;return v?`https://www.youtube.com/embed/${v}?autoplay=1&mute=${muted?1:0}`:`https://www.youtube.com/embed/live_stream?channel=${c.yt}&autoplay=1&mute=${muted?1:0}`;}
   if(esKick(src)) return `https://player.kick.com/${slug(src)}?autoplay=true&muted=${muted?'true':'false'}`;
 }
 function montar(el,src,muted){
@@ -365,7 +365,7 @@ function pintarSectores(){
     const cuantos=s.id==='ahora'?CANALES.filter(c=>live.has(c.id)).length:CANALES.filter(c=>c.sec===s.id&&live.has(c.id)).length;
     return `<button role="tab" aria-selected="${sector===s.id}" data-sec="${s.id}">${s.n}${cuantos?`<i>${cuantos}</i>`:''}</button>`}).join('');
   $('#sectores').querySelectorAll('button').forEach(b=>b.onclick=()=>{sector=b.dataset.sec;pintarLista()});
-  $('#franja').textContent=`${f.n}: ${SECTORES.find(s=>s.id===f.orden[0]).n.toLowerCase()} suele tener más directos`;
+  $('#franja').textContent=`${f.n} suele haber más directos en ${SECTORES.find(s=>s.id===f.orden[0]).n}`;
 }
 function pintarLista(){
   pintarSectores();
@@ -374,7 +374,7 @@ function pintarLista(){
     const vivos=CANALES.filter(c=>live.has(c.id));
     const f=franja();
     if(vivos.length) html+=`<div class="grupo">En directo ahora</div>${vivos.map(filaCanal).join('')}`;
-    html+=`<div class="grupo">Lo de esta hora</div>`+CANALES.filter(c=>c.sec===f.orden[0]&&!live.has(c.id)).map(filaCanal).join('');
+    html+=`<div class="grupo">Lo de esta hora</div>`+CANALES.filter(c=>f.orden.slice(0,2).includes(c.sec)&&c.sec!=='noticias'&&!live.has(c.id)).sort((a,b)=>f.orden.indexOf(a.sec)-f.orden.indexOf(b.sec)).map(filaCanal).join('');
     html+=`<div class="grupo">Siempre en directo</div>`+CANALES.filter(c=>c.sec==='noticias').map(filaCanal).join('');
   } else {
     const lista=CANALES.filter(c=>c.sec===sector).sort((a,b)=>live.has(b.id)-live.has(a.id));
