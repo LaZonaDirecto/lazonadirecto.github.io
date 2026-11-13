@@ -57,7 +57,8 @@
   .boton[aria-pressed="false"]{color:var(--suave)}
 
   /* ---------- Cuerpo ---------- */
-  .cuerpo{display:grid;grid-template-columns:1fr 320px;gap:18px;padding:0 22px 22px;min-height:0}
+  .zona{display:flex;flex-direction:column;min-height:0}
+  .cuerpo{flex:1;display:grid;grid-template-columns:1fr 320px;gap:18px;padding:0 22px 22px;min-height:0}
   .escenario{display:flex;flex-direction:column;min-height:0;gap:14px}
 
   .monitores{flex:1;display:grid;gap:12px;min-height:0}
@@ -193,7 +194,7 @@
     <button class="boton" id="probar" title="Ver cómo es un aviso"><span class="txt">Probar aviso</span><span aria-hidden="true">⚡</span></button>
   </div>
 
-  <div>
+  <div class="zona">
     <div class="ultima" id="ultima" role="alert"><strong>Última hora</strong><span id="ultimaTxt"></span><button id="ultimaVer">Ver ahora</button></div>
     <div class="cuerpo">
       <section class="escenario" aria-label="Directos">
