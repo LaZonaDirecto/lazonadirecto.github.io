@@ -308,7 +308,9 @@ function analizar(s){const c=chat[s];if(!c)return null;const now=Date.now();
 function actualizarAnalisis(){for(const s in chat){const c=chat[s],a=analizar(s);if(!a)continue;c.a=a;c.ema=c.ema==null?a.momento:0.55*c.ema+0.45*a.momento}}
 function ritmo(s){return (chat[s]&&chat[s].a)||{r30:0,base:0,calor:1,u30:0,reacc:0,frase:'',subs:0,raid:null,bits:0,temas:[],crec:0,f:{},momento:0}}
 function momento(s){return (chat[s]&&chat[s].ema)||0}
-function puntos(s){const d=datos[s]||{};if(!d.vivo)return -1;const v=d.espectadores||0;const aud=cl((Math.log10(v+10)-2.7)/2.3);return (0.4*aud+0.6*momento(s))*(v<800?0.6:1)}
+function puntos(s){const d=datos[s]||{};if(!d.vivo)return -1;const v=d.espectadores||0;const aud=cl((Math.log10(v+10)-2.7)/2.3);return (0.6*aud+0.4*momento(s))*(v<800?0.6:1)}
+/* El Canal La Zona solo salta a directos de un tamaño parecido: al menos 2.000 espectadores y un 30 % del que estás viendo */
+function elegible(s,cur){const v=(datos[s]||{}).espectadores||0,vc=(datos[cur]||{}).espectadores||0;return vivo(s)&&v>=2000&&v>=0.3*vc}
 function barritas(m){const k=1+Math.round(cl(m/0.6)*4);return `<span class="calor${m<0.15?' fria':''}" title="Momento ${Math.round(m*100)}/100">${[1,2,3,4,5].map(i=>`<i class="${i<=k?'on':''}"></i>`).join('')}</span>`}
 function frasechat(s){return ritmo(s).frase||''}
 /* Razones legibles de por qué un directo está interesante ahora */
@@ -411,15 +413,21 @@ function mejores(){return CANALES.filter(c=>esTwitch(c.id)&&vivo(c.id)).sort((a,
 function decidirZona(){
   if(!arrancado){const b=modo==='zona'?(mejores()[0]||'tv:rtve24h'):null;if(b&&b!==portadaSrc)construir();return}
   if(modo!=='zona')return;
-  const best=mejores()[0];
-  if(!best){if(enZona!=='tv:rtve24h')cambiarZona('tv:rtve24h');return}
-  if(best===enZona)return;
-  const cur=enZona, pc=vivo(cur)&&!esTV(cur)?puntos(cur):-1, pb=puntos(best), seg=(Date.now()-ultimoCambio)/1000;
-  if(pc<0) return cambiarZona(best);
-  if(seg>=PERMANENCIA_MIN && pb>pc*1.18) return cambiarZona(best);
-  if(seg>=60 && momento(best)>=0.5 && pb>pc*1.05) return cambiarZona(best);
+  const todos=mejores();
+  if(!todos.length){if(enZona!=='tv:rtve24h')cambiarZona('tv:rtve24h');return}
+  const cur=enZona, pc=vivo(cur)&&!esTV(cur)?puntos(cur):-1;
+  if(pc<0) return cambiarZona(todos[0]);
+  if(actual&&actual.auto)return;
+  const best=todos.find(s=>s!==cur&&elegible(s,cur)&&!(rechazado[s]&&Date.now()-rechazado[s]<600000));
+  if(!best)return;
+  const pb=puntos(best), seg=(Date.now()-ultimoCambio)/1000;
+  if((seg>=PERMANENCIA_MIN && pb>pc*1.18) || (seg>=60 && momento(best)>=0.5 && pb>pc*1.05)) proponerCambio(best);
 }
 function motivo(s){const d=datos[s]||{};const p=razones(s);if(d.espectadores)p.push(fmt(d.espectadores)+' espectadores');return p.join(' · ')}
+const rechazado={}, AUTO_SEG=12;
+function proponerCambio(s){const r=razonCorta(s);
+  const m={id:'zona-'+s+'-'+Date.now(),canal:s,auto:true,tema:nombre(s),resumen:[categoria(s),fmt((datos[s]||{}).espectadores||0)+' viendo',r].filter(Boolean).join(' · ')};
+  vistos.add(m.id);if(actual&&!actual.auto){cola.unshift(m);cerrar(false);return}cola.unshift(m);if(!actual)siguiente()}
 function cambiarZona(s){
   const c=$('#cort');if(c){$('#cortNom').textContent=nombre(s);$('#cortPor').textContent=categoria(s);c.classList.add('si');setTimeout(()=>c.classList.remove('si'),2600)}
   setTimeout(()=>{enZona=s;ultimoCambio=Date.now();poner(0,s)},900);
@@ -439,15 +447,17 @@ function buscarMomentos(){
 function encolar(m){if(vistos.has(m.id))return;vistos.add(m.id);if(!m.urgente&&tiles.some(t=>t.src===m.canal))return;m.urgente?cola.unshift(m):cola.push(m);if(!actual)siguiente()}
 function siguiente(){actual=cola.shift();if(!actual)return;const m=actual,p=$('#previo');
   $('#pAv').outerHTML=avatar(m.canal).replace('class="av','id="pAv" class="av');
-  $('#pEstado').textContent=m.urgente?'Última hora':'Está pasando ahora';$('#pTema').textContent=m.tema||nombre(m.canal);$('#pFrase').textContent=m.resumen||'';
+  $('#pEstado').textContent=m.auto?`En ${AUTO_SEG} s el Canal La Zona cambia a`:m.urgente?'Última hora':'Está pasando ahora';
+  $('#pCambiar').textContent=m.auto?'Cambiar ya':'Cambiar a este directo';$('#pSeguir').textContent=m.auto?`Quedarme con ${nombre(enZona)}`:'Seguir aquí';$('#pTema').textContent=m.tema||nombre(m.canal);$('#pFrase').textContent=m.resumen||'';
   const tele=$('#pTele');tele.innerHTML='';
   if(!esTwitch(m.canal))tele.innerHTML=`<iframe title="${nombre(m.canal)}" src="${urlFrame(m.canal,true)}" allow="autoplay; encrypted-media"></iframe>`;
   else if(m.clip)tele.innerHTML=`<iframe title="Clip" src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(m.clip)}&parent=${HOST}&autoplay=true&muted=true"></iframe>`;
   else{const d=document.createElement('div');d.id='pTw';tele.appendChild(d);new Twitch.Player('pTw',{channel:m.canal,width:'100%',height:'100%',parent:[HOST],muted:true,autoplay:true})}
   p.classList.add('si');p.setAttribute('aria-hidden','false');
-  const r=$('#pReloj');r.style.transition='none';r.style.strokeDashoffset='0';requestAnimationFrame(()=>requestAnimationFrame(()=>{r.style.transition=`stroke-dashoffset ${AVISO_SEG}s linear`;r.style.strokeDashoffset='94.25'}));
-  clearTimeout(timerAviso);timerAviso=setTimeout(()=>cerrar(false),AVISO_SEG*1000)}
+  const r=$('#pReloj');r.style.transition='none';r.style.strokeDashoffset='0';requestAnimationFrame(()=>requestAnimationFrame(()=>{r.style.transition=`stroke-dashoffset ${m.auto?AUTO_SEG:AVISO_SEG}s linear`;r.style.strokeDashoffset='94.25'}));
+  clearTimeout(timerAviso);timerAviso=setTimeout(()=>cerrar(!!m.auto),(m.auto?AUTO_SEG:AVISO_SEG)*1000)}
 function cerrar(cambiar){clearTimeout(timerAviso);const m=actual,p=$('#previo');p.classList.remove('si');p.setAttribute('aria-hidden','true');setTimeout(()=>{$('#pTele').innerHTML=''},450);
+  if(m&&m.auto){if(cambiar&&modo==='zona')cambiarZona(m.canal);else{rechazado[m.canal]=Date.now();ultimoCambio=Date.now();if(!cambiar)toast('Te quedas con '+nombre(enZona))}actual=null;setTimeout(siguiente,900);return}
   if(cambiar&&m){if(modo==='zona'){enZona=m.canal;ultimoCambio=Date.now();poner(0,m.canal)}else{poner(sel,m.canal)}silenciar(sel,false);toast('Ahora ves a '+nombre(m.canal))}
   actual=null;setTimeout(siguiente,900)}
 $('#pCambiar').onclick=()=>cerrar(true);$('#pSeguir').onclick=()=>cerrar(false);
@@ -515,6 +525,7 @@ async function leerEstado(){try{const e=await (await fetch('estado.json?t='+Date
   await Promise.race([comprobarDirectos(),new Promise(r=>setTimeout(r,7000))]);
   construir(); primeraCarga=false;
   if(new URLSearchParams(location.search).has('demo')){const s=mejores()[1]||'ibai';setTimeout(()=>encolar({id:'demo',canal:s,tema:`Se está liando con ${nombre(s)}`,resumen:categoria(s)+' · el chat grita «NOOOO»'}),2500)}
+  if(new URLSearchParams(location.search).has('demozona')&&modo==='zona'){setTimeout(()=>{const s=mejores().find(c=>c!==enZona);if(s)proponerCambio(s)},4000)}
   leerEstado();
   setInterval(comprobarDirectos,90000);
   setInterval(()=>{actualizarAnalisis();decidirZona();buscarMomentos();pintarBarra();pintarRanking()},10000);

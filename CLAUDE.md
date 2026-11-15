@@ -5,7 +5,9 @@ El dueño es Aka Rikk. Habla en español: responde y escribe todo (código, come
 
 ## Cómo funciona (versión actual)
 - Tres modos: **Canal La Zona** (automático: pone lo más interesante y cambia solo; permanencia mínima 150 s, cambia si otro supera ×1,18 en puntos, o tras 60 s si otro tiene momento ≥ 0,5), **Elegir directo** y **Multivista** (2 o 4).
-- Puntos = 0,4 × audiencia (log de espectadores, 0–1) + 0,6 × **momento** (media suavizada cada 10 s). Por debajo de 800 espectadores, ×0,6.
+- Puntos = 0,6 × audiencia (log de espectadores, 0–1) + 0,4 × **momento** (media suavizada cada 10 s). Por debajo de 800 espectadores, ×0,6.
+- Saltos sin bajones de público: el Canal La Zona solo cambia a directos con ≥ 2.000 espectadores y ≥ 30 % de los del que suena (de IlloJuan a Rubius sí, a un canal pequeño no). Los pequeños con un buen momento salen como aviso opcional.
+- Antes de cada cambio automático sale la tarjeta verde 12 s: «Cambiar ya» / «Quedarme con X». Si se queda, no vuelve a proponer ese canal en 10 min y espera otros 150 s. `?demozona` lo prueba.
 - Momento (0–1), siempre comparando los últimos 30 s con lo normal en ese canal (5 min): ritmo del chat 28 %, personas distintas escribiendo 17 %, reacciones (risas, NOOO, ???, emotes) 20 %, todo el chat repitiendo la misma frase 15 %, subs/bits/raids 10 %, crecimiento de espectadores en 10 min 10 %. Con chats muy pequeños se reduce (poca muestra).
 - Temas: palabras que más personas distintas repiten en el último minuto (sin palabras vacías ni tacos). Salen en "Por qué estás viendo esto", en el ranking y en los avisos. Para titulares de verdad ("Xokas sobre Abascal") hace falta el motor con la API de Claude.
 - Quién está en directo: SOLO decapi.me `/twitch/viewercount/<canal>` (número = en directo). No usar los eventos ONLINE/OFFLINE del reproductor de Twitch: fallan (marcaban a Auron en directo y a Rubius sin conexión).
