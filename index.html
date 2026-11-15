@@ -57,6 +57,19 @@ img{display:block}
 .monitor .etiqueta{position:absolute;left:12px;top:12px;z-index:3;pointer-events:none;padding:6px 11px;border-radius:999px;background:rgba(7,11,28,.8);backdrop-filter:blur(8px);font-weight:800;font-size:12.5px}
 .monitor.antena .etiqueta{background:var(--pgm)}
 .monitores.n1 .etiqueta{display:none}
+.portada{position:relative;display:block;width:100%;aspect-ratio:16/9;border-radius:var(--r-xl);overflow:hidden;background:#05081A;text-align:left;
+  box-shadow:0 0 0 2px var(--pgm),0 0 60px -14px rgba(255,45,85,.6),0 40px 80px -40px rgba(0,0,0,.9)}
+.portada img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.portada::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,11,28,0) 30%,rgba(7,11,28,.92))}
+.portada .cont{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:clamp(16px,3vw,34px);display:flex;align-items:center;gap:clamp(14px,2vw,24px)}
+.portada .play{width:clamp(60px,8vw,96px);aspect-ratio:1;border-radius:50%;background:var(--pgm);display:grid;place-items:center;flex:0 0 auto;
+  box-shadow:0 0 0 10px rgba(255,45,85,.18),0 20px 50px -10px rgba(255,45,85,.8);transition:transform .2s ease}
+.portada:hover .play{transform:scale(1.07)}
+.portada .play svg{width:36%;margin-left:9%}
+.portada small{display:block;color:#FF9DB2;font-weight:800;font-size:14px;margin-bottom:4px}
+.portada strong{display:block;font-family:var(--display);font-weight:800;font-size:clamp(26px,4.2vw,50px);letter-spacing:-.035em;line-height:1}
+.portada p{margin:7px 0 0;color:#C9CEEA;font-weight:600;font-size:clamp(13px,1.4vw,16px)}
+.portada .sinimg{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:clamp(60px,12vw,160px);color:#1C2552}
 .cortinilla{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,rgba(7,11,28,.55),rgba(7,11,28,.92));opacity:0;pointer-events:none;transition:opacity .35s}
 .cortinilla.si{opacity:1}
 .cortinilla div{text-align:center}
@@ -251,7 +264,7 @@ const datos={};
 const chat={};
 let modo=store.get('modo','zona'), n=store.get('n',2), tiles=[], sel=0, filtro='todos';
 let avisos=store.get('avisos',true), enZona=null, ultimoCambio=0, actual=null, cola=[], timerAviso=null, vistos=new Set();
-let primeraCarga=true, sonido=false;
+let primeraCarga=true, sonido=false, arrancado=false, portadaSrc=null;
 
 function tono(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}
 function avatar(s,cls='av'){const c=canal(s);const ini=esTV(s)?'24h':c.n.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/g,'').slice(0,2);return `<span class="${cls}${esTV(s)?' tv':''}" style="--h:${tono(s)}" aria-hidden="true">${ini}</span>`}
@@ -328,16 +341,23 @@ function construir(){
   if(modo==='zona') lista=[mejores()[0]||'tv:rtve24h'];
   else{const guard=store.get('tiles',[]).filter(s=>vivo(s));lista=[...new Set([...guard,...mejores()])].slice(0,cuantos);if(!lista.length)lista=['tv:rtve24h']}
   if(modo==='zona'){enZona=lista[0];ultimoCambio=Date.now()}
+  if(!arrancado){tiles=[];sel=0;portadaSrc=lista[0];mon.className='monitores n1';mon.innerHTML=portada(lista[0]);
+    $('#portada').onclick=()=>{arrancado=true;sonido=true;construir()};pintarTodo();return}
   tiles=[];sel=Math.min(sel,cuantos-1);
   lista.forEach((s,i)=>{const el=document.createElement('div');el.className='monitor';
     el.innerHTML=`<span class="etiqueta"></span>${modo==='zona'?'<div class="cortinilla" id="cort"><div><small>Cambiando a</small><strong id="cortNom"></strong><p id="cortPor"></p></div></div>':''}`;
     mon.appendChild(el);tiles.push({src:s,el,h:montar(el,s,!sonido||i!==sel)})});
   pintarTodo();
 }
+function portada(s){const d=datos[s]||{};
+  const img=esTV(s)?`<img alt="" src="https://i.ytimg.com/vi/${canal(s).video}/hqdefault.jpg">`:esTwitch(s)?`<img alt="" src="https://static-cdn.jtvnw.net/previews-ttv/live_user_${s}-1280x720.jpg?t=${Date.now()}">`:`<div class="sinimg">KICK</div>`;
+  const pie=[categoria(s),d.espectadores?fmt(d.espectadores)+' viendo':''].filter(Boolean).join(' · ');
+  return `<button class="portada" id="portada" aria-label="Ver a ${nombre(s)} en directo">${img}<span class="cont"><span class="play"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M5 3.5v17l15-8.5z"/></svg></span><span><small>${modo==='zona'?'Canal La Zona · ahora suena':'En directo ahora'}</small><strong>${nombre(s)}</strong><p>${pie}</p></span></span></button>`}
 function mejores(){return CANALES.filter(c=>esTwitch(c.id)&&vivo(c.id)).sort((a,b)=>puntos(b.id)-puntos(a.id)).map(c=>c.id)}
 
 /* ================= Canal La Zona: decide qué poner ================= */
 function decidirZona(){
+  if(!arrancado){const b=modo==='zona'?(mejores()[0]||'tv:rtve24h'):null;if(b&&b!==portadaSrc)construir();return}
   if(modo!=='zona')return;
   const best=mejores()[0];
   if(!best){if(enZona!=='tv:rtve24h')cambiarZona('tv:rtve24h');return}
@@ -386,9 +406,9 @@ function pintarMonitores(){tiles.forEach((t,i)=>{t.el.classList.toggle('antena',
   e.textContent=modo==='zona'?'● Canal La Zona':nombre(t.src);
   let o=t.el.querySelector('.oir');if(modo==='multi'&&i!==sel){if(!o){o=document.createElement('button');o.className='oir';o.textContent='Escuchar este';o.onclick=()=>{sel=i;tiles.forEach((_,j)=>silenciar(j,j!==sel));pintarTodo()};t.el.appendChild(o)}}else o?.remove()})}
 function pintarBarra(){
-  const s=tiles[sel]?.src;if(!s)return;const d=datos[s]||{};
+  const s=tiles[sel]?.src||portadaSrc;if(!s)return;const d=datos[s]||{};
   const meta=[vivo(s)&&!esTV(s)?`<span class="sello">En directo</span>`:'',`<span>${categoria(s)}</span>`,d.espectadores?`<span><b>${fmt(d.espectadores)}</b> viendo</span>`:'',esTwitch(s)&&chat[s]?`<span>Chat ${barritas(ritmo(s).calor)}</span>`:''].filter(Boolean).join('');
-  const acc=(sonido?'':`<button class="boton prim" id="bSonido">Activar sonido</button>`)+(modo==='zona'?`<button class="boton" id="bQuedar">Quedarme en este directo</button>`:`<button class="boton prim" id="bZona">Volver al Canal La Zona</button>`);
+  const acc=(sonido||!arrancado?'':`<button class="boton prim" id="bSonido">Activar sonido</button>`)+(modo==='zona'?`<button class="boton" id="bQuedar">Quedarme en este directo</button>`:`<button class="boton prim" id="bZona">Volver al Canal La Zona</button>`);
   $('#barra').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><div class="meta">${meta}</div></div><div class="acciones">${acc}</div>`;
   $('#bQuedar')?.addEventListener('click',()=>{store.set('tiles',[s]);ponerModo('uno')});
   $('#bZona')?.addEventListener('click',()=>ponerModo('zona'));
@@ -418,6 +438,7 @@ function pintarRejilla(){
   $('#rejilla').querySelectorAll('.tarjeta').forEach(b=>b.onclick=()=>verDirecto(b.dataset.src));
 }
 function verDirecto(s){
+  if(!arrancado){arrancado=true;sonido=true;store.set('tiles',[s]);if(modo==='zona'){ponerModo('uno')}else construir();window.scrollTo({top:0,behavior:'smooth'});return}
   if(modo==='zona'){store.set('tiles',[s]);ponerModo('uno');window.scrollTo({top:0,behavior:'smooth'});return}
   const ya=tiles.findIndex(t=>t.src===s);if(ya>=0){sel=ya;tiles.forEach((_,j)=>silenciar(j,j!==sel));pintarTodo();return}
   poner(sel,s);silenciar(sel,false);window.scrollTo({top:0,behavior:'smooth'});
