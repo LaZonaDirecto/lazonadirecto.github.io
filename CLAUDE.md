@@ -20,6 +20,7 @@ El dueño es Aka Rikk. Habla en español: responde y escribe todo (código, come
   ```
   La web solo usa `en_directo` si `actualizado` tiene valor.
 - `motor/zona_estado.py`: se ejecuta en el Mac del dueño. Pregunta a Twitch quién está en directo, transcribe el último minuto (faster-whisper), saca el titular con la API de Claude y hace `git push` de `estado.json`. Las claves van en `motor/config_zona.json`, que está en `.gitignore`: **no se suben nunca claves al repositorio** (es público).
+- Sin motor, la web ya sabe quién está en directo en Twitch (y a qué juega) preguntando a decapi.me (`/twitch/uptime/<canal>` y `/twitch/game/<canal>`) al entrar y cada 3 min. Kick todavía no.
 - Ids de canal: Twitch = login (`ibai`), Kick = `kick:<canal>`, tele = `tv:<id>`.
 
 ## Reglas que no se pueden romper
