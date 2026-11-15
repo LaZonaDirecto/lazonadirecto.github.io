@@ -1,0 +1,4 @@
+motor/config_zona.json
+*.tmp
+__pycache__/
+.DS_Store

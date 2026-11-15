@@ -1,0 +1,13 @@
+{
+  "twitch_client_id": "PEGAR_AQUI",
+  "twitch_client_secret": "PEGAR_AQUI",
+  "anthropic_api_key": "PEGAR_AQUI",
+  "modelo": "claude-haiku-5-5",
+  "whisper": "small",
+  "repo": "/Users/TU_USUARIO/Movies/La Zona en Directo/web",
+  "canales": ["ibai", "rubius", "illojuan", "elxokas", "auronplay", "thegrefg", "knekro", "mixwell",
+              "peereira7", "agustin51", "nilojeda", "djmariio", "baitybait", "revenant", "lolito",
+              "spursito", "cristinini", "nissaxter", "vegetta777", "willyrex"],
+  "nombres": {"elxokas": "Xokas", "auronplay": "Auron", "thegrefg": "Grefg", "peereira7": "Pereira",
+              "illojuan": "IlloJuan", "ibai": "Ibai", "rubius": "Rubius", "nilojeda": "Nil Ojeda"}
+}
