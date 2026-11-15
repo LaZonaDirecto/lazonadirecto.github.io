@@ -250,7 +250,7 @@ const datos={};
 const chat={};
 let modo=store.get('modo','zona'), n=store.get('n',2), tiles=[], sel=0, filtro='todos';
 let avisos=store.get('avisos',true), enZona=null, ultimoCambio=0, actual=null, cola=[], timerAviso=null, vistos=new Set();
-let primeraCarga=true;
+let primeraCarga=true, sonido=false;
 
 function tono(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}
 function avatar(s,cls='av'){const c=canal(s);const ini=esTV(s)?'24h':c.n.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/g,'').slice(0,2);return `<span class="${cls}${esTV(s)?' tv':''}" style="--h:${tono(s)}" aria-hidden="true">${ini}</span>`}
@@ -318,7 +318,7 @@ function montar(el,s,muted){
 }
 function silenciar(i,m){const t=tiles[i];if(!t)return;if(t.h.tipo==='tw'){try{t.h.p.setMuted(m)}catch(e){}}else{const u=urlFrame(t.src,m);if(t.h.f.src!==u)t.h.f.src=u}}
 function poner(i,s){const t=tiles[i];if(!t||t.src===s)return;
-  if(t.h.tipo==='tw'&&esTwitch(s)){t.h.p.setChannel(s);t.src=s}else{t.src=s;t.h=montar(t.el,s,i!==sel)}
+  if(t.h.tipo==='tw'&&esTwitch(s)){t.h.p.setChannel(s);t.src=s}else{t.src=s;t.h=montar(t.el,s,!sonido||i!==sel)}
   if(modo!=='zona')store.set('tiles',tiles.map(x=>x.src));pintarTodo()}
 function construir(){
   const cuantos=modo==='multi'?n:1;
@@ -330,7 +330,7 @@ function construir(){
   tiles=[];sel=Math.min(sel,cuantos-1);
   lista.forEach((s,i)=>{const el=document.createElement('div');el.className='monitor';
     el.innerHTML=`<span class="etiqueta"></span>${modo==='zona'?'<div class="cortinilla" id="cort"><div><small>Cambiando a</small><strong id="cortNom"></strong><p id="cortPor"></p></div></div>':''}`;
-    mon.appendChild(el);tiles.push({src:s,el,h:montar(el,s,i!==sel)})});
+    mon.appendChild(el);tiles.push({src:s,el,h:montar(el,s,!sonido||i!==sel)})});
   pintarTodo();
 }
 function mejores(){return CANALES.filter(c=>esTwitch(c.id)&&vivo(c.id)).sort((a,b)=>puntos(b.id)-puntos(a.id)).map(c=>c.id)}
@@ -387,10 +387,11 @@ function pintarMonitores(){tiles.forEach((t,i)=>{t.el.classList.toggle('antena',
 function pintarBarra(){
   const s=tiles[sel]?.src;if(!s)return;const d=datos[s]||{};
   const meta=[vivo(s)&&!esTV(s)?`<span class="sello">En directo</span>`:'',`<span>${categoria(s)}</span>`,d.espectadores?`<span><b>${fmt(d.espectadores)}</b> viendo</span>`:'',esTwitch(s)&&chat[s]?`<span>Chat ${barritas(ritmo(s).calor)}</span>`:''].filter(Boolean).join('');
-  const acc=modo==='zona'?`<button class="boton" id="bQuedar">Quedarme en este directo</button>`:`<button class="boton prim" id="bZona">Volver al Canal La Zona</button>`;
+  const acc=(sonido?'':`<button class="boton prim" id="bSonido">Activar sonido</button>`)+(modo==='zona'?`<button class="boton" id="bQuedar">Quedarme en este directo</button>`:`<button class="boton prim" id="bZona">Volver al Canal La Zona</button>`);
   $('#barra').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><div class="meta">${meta}</div></div><div class="acciones">${acc}</div>`;
   $('#bQuedar')?.addEventListener('click',()=>{store.set('tiles',[s]);ponerModo('uno')});
   $('#bZona')?.addEventListener('click',()=>ponerModo('zona'));
+  $('#bSonido')?.addEventListener('click',activarSonido);
   const por=$('#porque');
   if(modo==='zona'){por.hidden=false;const m=motivo(s);por.innerHTML=esTV(s)?'Ahora mismo hay poco en directo, así que el Canal La Zona pone las noticias 24 horas. En cuanto empiece algo fuerte, cambia solo.':`<b>Por qué estás viendo esto:</b> es el directo con más tirón ahora mismo${m?' · '+m:''}. El Canal La Zona cambia solo cuando otro directo se pone más interesante.`}
   else por.hidden=true;
@@ -423,6 +424,7 @@ function verDirecto(s){
 function ponerModo(m){modo=m;store.set('modo',m);if(m==='multi'&&n<2)n=2;
   document.querySelectorAll('.modos button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.modo===m));construir()}
 document.querySelectorAll('.modos button').forEach(b=>b.onclick=()=>{if(b.dataset.modo==='multi'&&modo==='multi'){n=n===2?4:2;store.set('n',n)}ponerModo(b.dataset.modo)});
+function activarSonido(){if(sonido)return;sonido=true;tiles.forEach((t,j)=>{silenciar(j,j!==sel);if(t.h.tipo==='tw'){try{t.h.p.play()}catch(e){}}});pintarBarra()}
 function pintarAvisos(){$('#avisos').setAttribute('aria-pressed',avisos)}
 $('#avisos').onclick=()=>{avisos=!avisos;store.set('avisos',avisos);pintarAvisos();toast(avisos?'Te avisaremos cuando pase algo en otro directo':'Sin avisos: te quedas tranquilo en tu directo')};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&actual)cerrar(false)});
