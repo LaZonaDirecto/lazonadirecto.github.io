@@ -4,235 +4,221 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>La Zona en Directo</title>
-<meta name="description" content="Los directos de los streamers de España en una sola pantalla, con aviso cuando pasa algo.">
-<meta name="theme-color" content="#0A0F24">
+<meta name="description" content="El mejor directo de España en cada momento, en un solo canal. Y todos los demás, a un toque.">
+<meta name="theme-color" content="#070B1C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://player.twitch.tv/js/embed/v1.js"></script>
 <style>
-  :root{
-    /* Paleta "sala de realización": fondo noche, rojo de programa, verde de previo */
-    --noche:#0A0F24;
-    --panel:#111833;
-    --panel-2:#18213F;
-    --borde:#26305A;
-    --texto:#EEF1FF;
-    --suave:#8E96C4;
-    --pgm:#FF2D55;      /* en antena / en directo */
-    --pvw:#19E3A0;      /* previo / momento nuevo */
-    --r-xl:22px; --r-md:14px; --r-sm:10px;
-    --display:'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
-    --body:'Manrope', system-ui, sans-serif;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
-  body{
-    background:
-      radial-gradient(1200px 600px at 70% -10%, #1B2558 0%, transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, #2A0F35 0%, transparent 55%),
-      var(--noche);
-    color:var(--texto);font-family:var(--body);font-size:15px;line-height:1.45;
-    -webkit-font-smoothing:antialiased;
-  }
-  button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
-  :focus-visible{outline:2px solid var(--pvw);outline-offset:2px;border-radius:8px}
+:root{
+  --noche:#070B1C; --panel:#0F1530; --panel-2:#161E40; --borde:#252F5C; --borde-suave:rgba(255,255,255,.06);
+  --texto:#F1F3FF; --suave:#8E96C4; --tenue:#5D6594;
+  --pgm:#FF2D55; --pvw:#19E3A0; --oro:#FFC24B;
+  --display:'Bricolage Grotesque','Manrope',system-ui,sans-serif; --body:'Manrope',system-ui,sans-serif;
+  --r-xl:24px; --r-lg:18px; --r-md:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;color:var(--texto);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(1100px 620px at 78% -8%,#1A2560 0%,transparent 62%),radial-gradient(900px 600px at -12% 108%,#2A0E3A 0%,transparent 58%),var(--noche);background-attachment:fixed}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+img{display:block}
+:focus-visible{outline:2px solid var(--pvw);outline-offset:3px;border-radius:10px}
+.envoltorio{max-width:1520px;margin:0 auto;padding:0 28px 60px}
 
-  .app{display:grid;grid-template-rows:auto 1fr;height:100%;max-width:1680px;margin:0 auto}
+/* ---------- Cabecera ---------- */
+.cabecera{display:flex;align-items:center;gap:16px;padding:20px 0 18px}
+.marca{display:flex;align-items:center;gap:12px;color:var(--texto);text-decoration:none}
+.marca .tally{width:14px;height:14px;border-radius:50%;background:var(--pgm);box-shadow:0 0 0 5px rgba(255,45,85,.16),0 0 22px var(--pgm);animation:latido 2.4s ease-in-out infinite}
+.marca b{font-family:var(--display);font-weight:800;font-size:23px;letter-spacing:-.035em}
+.esp{flex:1}
+.modos{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(15,21,48,.7);box-shadow:inset 0 0 0 1px var(--borde)}
+.modos button{padding:9px 16px;border-radius:999px;font-weight:700;font-size:13.5px;color:var(--suave);display:flex;align-items:center;gap:8px}
+.modos button[aria-pressed="true"]{background:var(--texto);color:var(--noche)}
+.modos .punto{width:7px;height:7px;border-radius:50%;background:var(--pgm)}
+.pildora{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;background:rgba(15,21,48,.7);box-shadow:inset 0 0 0 1px var(--borde);font-weight:700;font-size:13px}
+.pildora .luz{width:8px;height:8px;border-radius:50%;background:var(--pvw);box-shadow:0 0 10px var(--pvw)}
+.pildora[aria-pressed="false"]{color:var(--suave)} .pildora[aria-pressed="false"] .luz{background:#3C4470;box-shadow:none}
 
-  /* ---------- Cabecera ---------- */
-  .top{display:flex;align-items:center;gap:18px;padding:16px 22px}
-  .marca{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--texto)}
-  .marca .tally{width:14px;height:14px;border-radius:50%;background:var(--pgm);box-shadow:0 0 0 4px rgba(255,45,85,.18),0 0 18px var(--pgm)}
-  .marca b{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.03em;line-height:1}
-  .marca small{display:block;font-size:12px;color:var(--suave);font-weight:600;letter-spacing:.01em;margin-top:2px}
-  .esp{flex:1}
-  .vistas{display:flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--borde);border-radius:999px}
-  .vistas button{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;color:var(--suave);font-weight:700;font-size:13px}
-  .vistas button[aria-pressed="true"]{background:var(--panel-2);color:var(--texto);box-shadow:inset 0 0 0 1px var(--borde)}
-  .vistas svg{width:16px;height:16px}
-  .boton{display:flex;align-items:center;gap:9px;padding:10px 16px;border-radius:999px;background:var(--panel);border:1px solid var(--borde);font-weight:700;font-size:13px}
-  .boton .luz{width:8px;height:8px;border-radius:50%;background:var(--pvw);box-shadow:0 0 10px var(--pvw)}
-  .boton[aria-pressed="false"] .luz{background:#4A5277;box-shadow:none}
-  .boton[aria-pressed="false"]{color:var(--suave)}
+/* ---------- Escenario ---------- */
+.escenario{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.pantalla{position:relative}
+.monitores{display:grid;gap:12px}
+.monitores.n1{grid-template-columns:1fr}
+.monitores.n2{grid-template-columns:1fr 1fr}
+.monitores.n4{grid-template-columns:1fr 1fr}
+.monitor{position:relative;aspect-ratio:16/9;border-radius:var(--r-xl);overflow:hidden;background:#000;
+  box-shadow:0 0 0 1px var(--borde),0 40px 80px -40px rgba(0,0,0,.9)}
+.monitor.antena{box-shadow:0 0 0 2px var(--pgm),0 0 60px -14px rgba(255,45,85,.6),0 40px 80px -40px rgba(0,0,0,.9)}
+.monitor .vid{position:absolute;inset:0}
+.monitor .vid iframe{width:100%;height:100%;border:0;display:block}
+.monitor .oir{position:absolute;right:12px;top:12px;z-index:3;padding:7px 12px;border-radius:999px;background:rgba(7,11,28,.8);backdrop-filter:blur(8px);font-weight:700;font-size:12px}
+.monitor .etiqueta{position:absolute;left:12px;top:12px;z-index:3;pointer-events:none;padding:6px 11px;border-radius:999px;background:rgba(7,11,28,.8);backdrop-filter:blur(8px);font-weight:800;font-size:12.5px}
+.monitor.antena .etiqueta{background:var(--pgm)}
+.cortinilla{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,rgba(7,11,28,.55),rgba(7,11,28,.92));opacity:0;pointer-events:none;transition:opacity .35s}
+.cortinilla.si{opacity:1}
+.cortinilla div{text-align:center}
+.cortinilla small{display:block;color:var(--pvw);font-weight:800;font-size:13px;letter-spacing:.02em;margin-bottom:6px}
+.cortinilla strong{font-family:var(--display);font-size:clamp(28px,4vw,52px);letter-spacing:-.03em;line-height:1}
+.cortinilla p{margin:8px 0 0;color:var(--suave);font-weight:600}
 
-  /* ---------- Cuerpo ---------- */
-  .zona{display:flex;flex-direction:column;min-height:0}
-  .cuerpo{flex:1;display:grid;grid-template-columns:1fr 320px;gap:18px;padding:0 22px 22px;min-height:0}
-  .escenario{display:flex;flex-direction:column;min-height:0;gap:14px}
+.barra{display:flex;align-items:center;gap:16px;margin-top:16px}
+.barra .av{width:54px;height:54px;font-size:19px}
+.barra h1{margin:0;font-family:var(--display);font-weight:800;font-size:32px;letter-spacing:-.03em;line-height:1.02}
+.barra .meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:5px;color:var(--suave);font-weight:600;font-size:14px}
+.barra .meta b{color:var(--texto)}
+.barra .acciones{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.boton{padding:11px 16px;border-radius:999px;font-weight:800;font-size:13.5px;background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--borde)}
+.boton.prim{background:var(--texto);color:var(--noche);box-shadow:none}
+.sello{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(255,45,85,.14);color:#FF8FA6}
+.sello::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--pgm);box-shadow:0 0 8px var(--pgm)}
+.porque{margin-top:12px;padding:12px 14px;border-radius:var(--r-md);background:rgba(15,21,48,.6);box-shadow:inset 0 0 0 1px var(--borde-suave);color:var(--suave);font-size:13.5px;font-weight:600}
+.porque b{color:var(--texto)}
 
-  .monitores{flex:1;display:grid;gap:12px;min-height:0}
-  .monitores.n1{grid-template-columns:1fr}
-  .monitores.n2{grid-template-columns:1fr 1fr}
-  .monitores.n4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.av{display:grid;place-items:center;border-radius:50%;font-family:var(--display);font-weight:800;color:#fff;flex:0 0 auto;background:hsl(var(--h) 65% 42%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}
+.av.tv{background:#2B335E}
 
-  .monitor{position:relative;border-radius:var(--r-xl);overflow:hidden;background:#000;min-height:0;
-    box-shadow:0 0 0 1px var(--borde), 0 30px 60px -30px rgba(0,0,0,.8)}
-  .monitor.antena{box-shadow:0 0 0 2px var(--pgm), 0 0 40px -8px rgba(255,45,85,.55), 0 30px 60px -30px rgba(0,0,0,.8)}
-  .monitor .vid{position:absolute;inset:0}
-  .monitor .vid iframe{width:100%;height:100%;border:0;display:block}
-  .monitor .rotulo{position:absolute;left:14px;top:14px;z-index:3;display:flex;align-items:center;gap:8px;
-    padding:6px 12px 6px 8px;border-radius:999px;background:rgba(10,15,36,.78);backdrop-filter:blur(8px);
-    font-weight:700;font-size:13px;pointer-events:none}
-  .monitor .rotulo .av{width:22px;height:22px;font-size:10px}
-  .monitor.antena .rotulo{background:var(--pgm)}
-  .monitor .oir{position:absolute;right:14px;top:14px;z-index:3;padding:7px 12px;border-radius:999px;
-    background:rgba(10,15,36,.78);backdrop-filter:blur(8px);font-weight:700;font-size:12px}
-  .monitor .oir:hover{background:var(--panel-2)}
+/* ---------- Ranking ---------- */
+.ranking{background:linear-gradient(180deg,rgba(15,21,48,.9),rgba(15,21,48,.55));border-radius:var(--r-xl);box-shadow:inset 0 0 0 1px var(--borde);padding:18px 14px 12px;position:sticky;top:16px}
+.ranking h2{margin:0 6px;font-family:var(--display);font-size:19px;letter-spacing:-.02em}
+.ranking .sub{margin:3px 6px 12px;color:var(--suave);font-size:12.5px;font-weight:600}
+.fila{width:100%;display:grid;grid-template-columns:22px 40px 1fr auto;align-items:center;gap:10px;padding:9px 8px;border-radius:var(--r-md);text-align:left}
+.fila:hover{background:var(--panel-2)}
+.fila .pos{font-family:var(--display);font-weight:800;color:var(--tenue);text-align:center}
+.fila:first-of-type .pos{color:var(--oro)}
+.fila .av{width:40px;height:40px;font-size:14px}
+.fila .nom{font-weight:800;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila .cat{display:block;color:var(--suave);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila .dato{text-align:right;font-weight:800;font-size:13px}
+.fila .dato small{display:block}
+.fila[aria-current="true"]{background:rgba(255,45,85,.1);box-shadow:inset 0 0 0 1px rgba(255,45,85,.35)}
+.calor{display:inline-flex;gap:2px;vertical-align:middle;margin-top:4px}
+.calor i{width:4px;height:10px;border-radius:2px;background:#2A3366}
+.calor i.on{background:var(--pgm)}
+.calor.fria i.on{background:var(--pvw)}
+.vacio{padding:16px 8px;color:var(--suave);font-size:13.5px}
 
-  /* Ficha bajo el monitor principal */
-  .ficha{display:flex;align-items:center;gap:14px;padding:4px 4px 0}
-  .ficha .av{width:46px;height:46px;font-size:17px}
-  .ficha h1{margin:0;font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.025em;line-height:1.05}
-  .ficha p{margin:2px 0 0;color:var(--suave);font-weight:600}
-  .ficha .volver{margin-left:auto}
+/* ---------- Rejilla ---------- */
+.seccion{margin-top:38px}
+.seccion-cab{display:flex;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.seccion-cab h2{margin:0;font-family:var(--display);font-size:28px;letter-spacing:-.03em}
+.seccion-cab p{margin:2px 0 0;color:var(--suave);font-weight:600;font-size:14px}
+.filtros{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.filtros button{padding:8px 13px;border-radius:999px;font-size:13px;font-weight:700;color:var(--suave);background:rgba(15,21,48,.7);box-shadow:inset 0 0 0 1px var(--borde)}
+.filtros button[aria-pressed="true"]{background:var(--texto);color:var(--noche);box-shadow:none}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.tarjeta{text-align:left;border-radius:var(--r-lg);overflow:hidden;background:var(--panel);box-shadow:inset 0 0 0 1px var(--borde-suave);transition:transform .2s ease,box-shadow .2s ease}
+.tarjeta:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px var(--borde),0 24px 40px -24px rgba(0,0,0,.9)}
+.tarjeta .mini{position:relative;aspect-ratio:16/9;background:#05081A}
+.tarjeta .mini img{width:100%;height:100%;object-fit:cover}
+.tarjeta .mini .sello{position:absolute;left:10px;top:10px;background:rgba(7,11,28,.82);backdrop-filter:blur(6px)}
+.tarjeta .mini .viendo{position:absolute;right:10px;top:10px;padding:5px 9px;border-radius:999px;background:var(--pgm);font-size:11.5px;font-weight:800}
+.tarjeta .mini .fuego{position:absolute;right:10px;bottom:10px;padding:5px 9px;border-radius:999px;background:rgba(7,11,28,.82);font-size:11.5px;font-weight:800;color:#FFB4C3}
+.tarjeta .mini .sin{position:absolute;inset:0;display:grid;place-items:center;color:var(--tenue);font-weight:800;font-family:var(--display);font-size:22px}
+.tarjeta .info{display:flex;gap:11px;align-items:center;padding:12px 14px 14px}
+.tarjeta .info .av{width:36px;height:36px;font-size:13px}
+.tarjeta .info b{display:block;font-weight:800}
+.tarjeta .info span{display:block;color:var(--suave);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.tarjeta.apagada{opacity:.55}
+.tarjeta.apagada:hover{opacity:.85}
 
-  /* Avatares con monograma (color propio por canal) */
-  .av{display:grid;place-items:center;border-radius:50%;font-family:var(--display);font-weight:800;color:#fff;flex:0 0 auto;
-    background:hsl(var(--h) 70% 42%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}
-  .av.tv{background:#2B335E}
+/* ---------- Previo (aviso) ---------- */
+.previo{position:fixed;right:24px;bottom:24px;z-index:50;width:430px;max-width:calc(100vw - 20px);background:rgba(15,21,48,.94);backdrop-filter:blur(18px);border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:0 0 0 2px var(--pvw),0 0 50px -10px rgba(25,227,160,.5),0 40px 80px -20px rgba(0,0,0,.9);transform:translateY(calc(100% + 40px));opacity:0;transition:transform .45s cubic-bezier(.2,.9,.25,1.15),opacity .3s}
+.previo.si{transform:none;opacity:1}
+.previo .cab{display:flex;gap:12px;align-items:center;padding:14px 16px 8px}
+.previo .av{width:40px;height:40px;font-size:15px}
+.previo .estado{font-size:12px;font-weight:800;color:var(--pvw)}
+.previo h3{margin:2px 0 0;font-family:var(--display);font-size:21px;letter-spacing:-.025em;line-height:1.1}
+.previo .reloj{margin-left:auto;width:32px;height:32px;flex:0 0 auto}
+.previo .reloj circle{fill:none;stroke-width:3}.previo .reloj .f{stroke:var(--borde)}.previo .reloj .r{stroke:var(--pvw);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.previo .frase{margin:0;padding:0 16px 12px;color:var(--suave);font-size:13.5px;font-weight:600}
+.previo .tele{position:relative;aspect-ratio:16/9;background:#000;margin:0 12px;border-radius:var(--r-md);overflow:hidden}
+.previo .tele iframe,.previo .tele>div{width:100%;height:100%;border:0}
+.previo .acc{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;padding:12px}
+.previo .acc button{padding:13px;border-radius:var(--r-md);font-weight:800}
+.previo .si-cambiar{background:var(--pvw);color:#032B1E}
+.previo .no{background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--borde)}
 
-  /* ---------- Carril de canales ---------- */
-  .carril{display:flex;flex-direction:column;min-height:0;background:linear-gradient(180deg,var(--panel),rgba(17,24,51,.6));
-    border:1px solid var(--borde);border-radius:var(--r-xl);overflow:hidden}
-  .carril header{padding:18px 18px 10px}
-  .carril h2{margin:0;font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em}
-  .carril header p{margin:3px 0 0;color:var(--suave);font-size:13px}
-  .lista{overflow-y:auto;padding:4px 10px 14px;scrollbar-width:thin;scrollbar-color:var(--borde) transparent}
-  .grupo{margin:12px 8px 6px;color:var(--suave);font-size:12px;font-weight:700}
-  .canal{width:100%;display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:var(--r-md);text-align:left}
-  .canal:hover{background:var(--panel-2)}
-  .canal .av{width:38px;height:38px;font-size:14px;position:relative}
-  .canal.vivo .av::after{content:"";position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;
-    background:var(--pgm);box-shadow:0 0 0 3px var(--panel)}
-  .canal .txt{min-width:0;flex:1}
-  .canal .nom{display:block;font-weight:700}
-  .canal .que{display:block;color:var(--suave);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .canal .pantalla{font-size:11.5px;font-weight:700;color:var(--pgm)}
-  .canal[aria-current="true"]{background:rgba(255,45,85,.08);box-shadow:inset 0 0 0 1px rgba(255,45,85,.35)}
+.toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-30px);opacity:0;z-index:60;padding:10px 16px;border-radius:999px;background:var(--panel-2);box-shadow:0 0 0 1px var(--borde);font-weight:700;font-size:13px;transition:.3s}
+.toast.si{transform:translate(-50%,0);opacity:1}
+@keyframes latido{50%{box-shadow:0 0 0 9px rgba(255,45,85,.05),0 0 22px var(--pgm)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-  .sectores{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-  .sectores button{padding:7px 11px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--suave);background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--borde);display:flex;align-items:center;gap:6px}
-  .sectores button[aria-selected="true"]{background:var(--texto);color:var(--noche);box-shadow:none}
-  .sectores i{font-style:normal;font-size:11px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--pgm);color:#fff;display:grid;place-items:center}
-  #franja{margin:3px 0 0;color:var(--suave);font-size:13px}
-  /* ---------- Última hora ---------- */
-  .ultima{display:none;align-items:center;gap:14px;margin:0 22px 14px;padding:12px 16px;border-radius:var(--r-md);
-    background:linear-gradient(90deg,#B0103A,#FF2D55);font-weight:700}
-  .ultima.si{display:flex}
-  .ultima strong{font-family:var(--display);font-size:16px;letter-spacing:-.01em}
-  .ultima button{margin-left:auto;background:#fff;color:#7A0B28;padding:8px 14px;border-radius:999px;font-weight:800}
-
-  /* ---------- Previo (aviso de momento) ---------- */
-  .previo{position:fixed;right:24px;bottom:24px;z-index:50;width:440px;max-width:calc(100vw - 20px);
-    background:rgba(17,24,51,.92);backdrop-filter:blur(18px);border-radius:var(--r-xl);overflow:hidden;
-    box-shadow:0 0 0 2px var(--pvw), 0 0 50px -10px rgba(25,227,160,.5), 0 40px 80px -20px rgba(0,0,0,.9);
-    transform:translateY(calc(100% + 40px)) scale(.98);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.25,1.15), opacity .3s}
-  .previo.si{transform:none;opacity:1}
-  .previo.urgente{box-shadow:0 0 0 2px var(--pgm), 0 0 50px -10px rgba(255,45,85,.6), 0 40px 80px -20px rgba(0,0,0,.9)}
-  .previo .cab{display:flex;align-items:center;gap:12px;padding:14px 16px 10px}
-  .previo .av{width:40px;height:40px;font-size:15px}
-  .previo .estado{font-size:12px;font-weight:800;color:var(--pvw);display:flex;align-items:center;gap:6px}
-  .previo.urgente .estado{color:#FF7A93}
-  .previo .estado::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:latido 1.2s ease-in-out infinite}
-  .previo h3{margin:2px 0 0;font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.08}
-  .previo .reloj{margin-left:auto;width:34px;height:34px;flex:0 0 auto}
-  .previo .reloj circle{fill:none;stroke-width:3}
-  .previo .reloj .fondo{stroke:var(--borde)}
-  .previo .reloj .resto{stroke:var(--pvw);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
-  .previo.urgente .reloj .resto{stroke:var(--pgm)}
-  .previo .frase{margin:0;padding:0 16px 12px;color:var(--suave);font-size:14px}
-  .previo .frase b{color:var(--texto);font-weight:700}
-  .previo .tele{position:relative;height:248px;background:#000;margin:0 12px;border-radius:var(--r-md);overflow:hidden}
-  .previo .tele iframe,.previo .tele>div{width:100%;height:100%;border:0;display:block}
-  .previo .acciones{display:grid;grid-template-columns:1.3fr 1fr;gap:10px;padding:12px}
-  .previo .acciones button{padding:14px;border-radius:var(--r-md);font-weight:800;font-size:15px}
-  .cambiar{background:var(--pvw);color:#032B1E}
-  .previo.urgente .cambiar{background:var(--pgm);color:#fff}
-  .seguir{background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--borde)}
-
-  .boton.volver{background:var(--panel-2)}
-  .aviso-corto{position:fixed;left:50%;top:22px;transform:translate(-50%,-30px);opacity:0;z-index:60;padding:10px 16px;border-radius:999px;
-    background:var(--panel-2);box-shadow:0 0 0 1px var(--borde);font-weight:700;font-size:13px;transition:.3s}
-  .aviso-corto.si{transform:translate(-50%,0);opacity:1}
-
-  @keyframes latido{50%{opacity:.35}}
-  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-
-  /* ---------- Móvil ---------- */
-  @media (max-width:1000px){
-    .cuerpo{grid-template-columns:1fr;grid-template-rows:auto auto;overflow-y:auto}
-    .monitores{aspect-ratio:16/9;flex:none}
-    .monitores.n2,.monitores.n4{aspect-ratio:auto;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0, calc((100vw - 56px)/2*9/16))}
-    .carril{max-height:none}
-    .lista{max-height:none}
-    .app{height:auto;min-height:100%}
-  }
-  @media (max-width:600px){
-    .top{padding:12px 14px;gap:10px;flex-wrap:wrap}
-    .marca small{display:none}
-    .vistas button span{display:none}
-    .boton .txt{display:none}
-    .cuerpo{padding:0 12px 16px;gap:14px}
-    .ficha h1{font-size:22px}
-    .ficha .av{width:40px;height:40px}
-    .previo{right:10px;left:10px;bottom:10px;width:auto}
-    .previo .tele{height:200px}
-    .ultima{margin:0 12px 12px}
-  }
+@media (max-width:1100px){
+  .escenario{grid-template-columns:1fr}
+  .ranking{position:static}
+}
+@media (max-width:640px){
+  .envoltorio{padding:0 12px 40px}
+  .cabecera{flex-wrap:wrap;gap:10px;padding:14px 0}
+  .marca b{font-size:20px}
+  .modos{order:3;width:100%;justify-content:space-between}
+  .modos button{flex:1;justify-content:center;padding:9px 6px}
+  .pildora .txt{display:none}
+  .monitores.n2,.monitores.n4{gap:6px}
+  .monitor{border-radius:14px}
+  .barra{flex-wrap:wrap}
+  .barra h1{font-size:24px}
+  .barra .acciones{margin-left:0;width:100%;justify-content:flex-start}
+  .rejilla{grid-template-columns:1fr 1fr;gap:10px}
+  .tarjeta .info{padding:9px 10px 11px}
+  .tarjeta .info .av{display:none}
+  .seccion-cab h2{font-size:23px}
+  .filtros{margin-left:0}
+  .previo{left:10px;right:10px;bottom:10px;width:auto}
+}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="top">
-    <a class="marca" href="./" aria-label="La Zona en Directo, inicio">
-      <span class="tally" aria-hidden="true"></span>
-      <span><b>La Zona en Directo</b><small>Los directos de España en una pantalla</small></span>
-    </a>
+<div class="envoltorio">
+  <header class="cabecera">
+    <a class="marca" href="./"><span class="tally" aria-hidden="true"></span><b>La Zona en Directo</b></a>
     <div class="esp"></div>
-    <div class="vistas" role="group" aria-label="Pantallas a la vez">
-      <button data-n="1" aria-pressed="true" title="Una pantalla"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="3" width="14" height="10" rx="2"/></svg><span>Una</span></button>
-      <button data-n="2" aria-pressed="false" title="Dos pantallas"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="4" width="6.5" height="8" rx="1.5"/><rect x="8.5" y="4" width="6.5" height="8" rx="1.5"/></svg><span>Dos</span></button>
-      <button data-n="4" aria-pressed="false" title="Cuatro pantallas"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="6.5" height="5.5" rx="1.2"/><rect x="8.5" y="2" width="6.5" height="5.5" rx="1.2"/><rect x="1" y="8.5" width="6.5" height="5.5" rx="1.2"/><rect x="8.5" y="8.5" width="6.5" height="5.5" rx="1.2"/></svg><span>Cuatro</span></button>
+    <div class="modos" role="group" aria-label="Cómo quieres verlo">
+      <button data-modo="zona" aria-pressed="true"><span class="punto"></span>Canal La Zona</button>
+      <button data-modo="uno" aria-pressed="false">Elegir directo</button>
+      <button data-modo="multi" aria-pressed="false">Multivista</button>
     </div>
-    <button class="boton" id="avisos" aria-pressed="true" title="Avisarme cuando pase algo en otro directo"><span class="luz"></span><span class="txt">Avisos activados</span></button>
-    <button class="boton" id="probar" title="Ver cómo es un aviso"><span class="txt">Probar aviso</span><span aria-hidden="true">⚡</span></button>
-  </div>
+    <button class="pildora" id="avisos" aria-pressed="true" title="Avisarme cuando pase algo en otro directo"><span class="luz"></span><span class="txt">Avisos</span></button>
+  </header>
 
-  <div class="zona">
-    <div class="ultima" id="ultima" role="alert"><strong>Última hora</strong><span id="ultimaTxt"></span><button id="ultimaVer">Ver ahora</button></div>
-    <div class="cuerpo">
-      <section class="escenario" aria-label="Directos">
-        <div class="monitores n1" id="monitores"></div>
-        <div class="ficha" id="ficha"></div>
-      </section>
-      <aside class="carril" aria-label="Canales">
-        <header><h2>Canales</h2><p id="franja"></p><div class="sectores" id="sectores" role="tablist" aria-label="Sectores"></div></header>
-        <div class="lista" id="lista"></div>
-      </aside>
+  <section class="escenario">
+    <div class="pantalla">
+      <div class="monitores n1" id="monitores"></div>
+      <div class="barra" id="barra"></div>
+      <div class="porque" id="porque" hidden></div>
     </div>
-  </div>
+    <aside class="ranking" aria-label="Lo más fuerte ahora">
+      <h2>Lo más fuerte ahora</h2>
+      <p class="sub">Por espectadores y actividad del chat</p>
+      <div id="ranking"></div>
+    </aside>
+  </section>
+
+  <section class="seccion">
+    <div class="seccion-cab">
+      <div><h2>Todos los directos</h2><p id="resumen">Comprobando quién está en directo…</p></div>
+      <div class="filtros" id="filtros"></div>
+    </div>
+    <div class="rejilla" id="rejilla"></div>
+  </section>
 </div>
 
 <div class="previo" id="previo" role="dialog" aria-label="Está pasando algo en otro directo" aria-hidden="true">
-  <div class="cab">
-    <span class="av" id="pAv"></span>
-    <div><div class="estado" id="pEstado">Está pasando ahora</div><h3 id="pTema"></h3></div>
-    <svg class="reloj" viewBox="0 0 36 36" aria-hidden="true"><circle class="fondo" cx="18" cy="18" r="15"/><circle class="resto" id="pReloj" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="0"/></svg>
-  </div>
+  <div class="cab"><span class="av" id="pAv"></span><div><div class="estado" id="pEstado">Está pasando ahora</div><h3 id="pTema"></h3></div>
+    <svg class="reloj" viewBox="0 0 36 36" aria-hidden="true"><circle class="f" cx="18" cy="18" r="15"/><circle class="r" id="pReloj" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="0"/></svg></div>
   <p class="frase" id="pFrase"></p>
   <div class="tele" id="pTele"></div>
-  <div class="acciones"><button class="cambiar" id="pCambiar">Cambiar a este directo</button><button class="seguir" id="pSeguir">Seguir aquí</button></div>
+  <div class="acc"><button class="si-cambiar" id="pCambiar">Cambiar a este directo</button><button class="no" id="pSeguir">Seguir aquí</button></div>
 </div>
-<div class="aviso-corto" id="corto" role="status"></div>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
-/* ================= Canales por sectores =================
-   sec: es (España, tarde-noche) · latam (Latinoamérica, noche y madrugada en España)
-        esports (competiciones y eventos, a cualquier hora) · noticias (24 h)
-   Los de Kick llevan id "kick:<canal>" y los de tele "tv:<canal>". */
+/* ================= Canales =================
+   sec: es · latam · esports · noticias. Kick = "kick:<canal>", tele = "tv:<id>". */
 const CANALES = [
-  // España
   {id:'ibai',n:'Ibai',sec:'es'},{id:'rubius',n:'Rubius',sec:'es'},{id:'illojuan',n:'IlloJuan',sec:'es'},
   {id:'elxokas',n:'Xokas',sec:'es'},{id:'auronplay',n:'Auronplay',sec:'es'},{id:'thegrefg',n:'TheGrefg',sec:'es'},
   {id:'knekro',n:'Knekro',sec:'es'},{id:'mixwell',n:'Mixwell',sec:'es'},{id:'peereira7',n:'Pereira',sec:'es'},
@@ -240,242 +226,224 @@ const CANALES = [
   {id:'baitybait',n:'BaityBait',sec:'es'},{id:'revenant',n:'Revenant',sec:'es'},{id:'lolito',n:'Lolito',sec:'es'},
   {id:'spursito',n:'Spursito',sec:'es'},{id:'cristinini',n:'Cristinini',sec:'es'},{id:'nissaxter',n:'Nissaxter',sec:'es'},
   {id:'zeling',n:'Zeling',sec:'es'},{id:'vegetta777',n:'Vegetta777',sec:'es'},{id:'willyrex',n:'Willyrex',sec:'es'},
-  // Latinoamérica
+  {id:'paache_',n:'Paache',sec:'es'},{id:'rickyedit',n:'Rickyedit',sec:'es'},{id:'carola',n:'Carola',sec:'es'},
+  {id:'juniorhealy',n:'JuniorHealy',sec:'es'},{id:'skain',n:'Skain',sec:'es'},
+  {id:'juansguarnizo',n:'Juan Guarnizo',sec:'latam'},{id:'rivers_gg',n:'Rivers',sec:'latam'},{id:'crystalmolly',n:'Crystal Molly',sec:'latam'},
   {id:'kick:westcol',n:'Westcol',sec:'latam'},{id:'kick:davooxeneize',n:'Davoo Xeneize',sec:'latam'},
   {id:'kick:lacobraaa',n:'La Cobra',sec:'latam'},{id:'kick:spreen',n:'Spreen',sec:'latam'},
   {id:'kick:mrstiventc',n:'MrStiven',sec:'latam'},{id:'kick:rdjavi',n:'RDJavi',sec:'latam'},
-  {id:'kick:kingteka',n:'Kingteka',sec:'latam'},{id:'kick:adrianozendejas32',n:'Adrián Ozendejas',sec:'latam'},
-  {id:'juansguarnizo',n:'Juan Guarnizo',sec:'latam'},{id:'rivers_gg',n:'Rivers',sec:'latam'},
-  {id:'crystalmolly',n:'Crystal Molly',sec:'latam'},
-  // Esports y eventos
   {id:'les',n:'LES · Liga española de LoL',sec:'esports'},{id:'lolesportsla',n:'LoL Esports en español',sec:'esports'},
   {id:'kingsleague',n:'Kings League',sec:'esports'},
-  // Noticias
-  {id:'tv:rtve24h',n:'Canal 24 Horas',sec:'noticias',sub:'RTVE · noticias',yt:'UC7QZIf0dta-XPXsp9Hv4dTw',video:'b4tE5aKhtlg'}
+  {id:'tv:rtve24h',n:'Canal 24 Horas',sec:'noticias',sub:'RTVE · noticias 24 h',yt:'UC7QZIf0dta-XPXsp9Hv4dTw',video:'b4tE5aKhtlg'}
 ];
-const SECTORES = [
-  {id:'ahora',n:'Ahora'},{id:'es',n:'España'},{id:'latam',n:'Latinoamérica'},{id:'esports',n:'Esports y eventos'},{id:'noticias',n:'Noticias'}
-];
-/* Franjas (hora de España): qué sector suele tener más directos */
-function franja(h=new Date().getHours()){
-  if(h>=2&&h<9)  return {id:'madrugada',n:'De madrugada',orden:['latam','esports','noticias','es']};
-  if(h>=9&&h<15) return {id:'manana',n:'Por la mañana',orden:['esports','es','latam','noticias']};
-  if(h>=15&&h<23)return {id:'tarde',n:'Por la tarde',orden:['es','esports','latam','noticias']};
-  return {id:'noche',n:'Por la noche',orden:['es','latam','esports','noticias']};
-}
-
-const ESTADO_URL='estado.json', POLL_MS=20000, AVISO_SEG=25, MAX_EDAD_MIN=10;
+const FILTROS=[{id:'todos',n:'En directo'},{id:'es',n:'España'},{id:'latam',n:'Latinoamérica'},{id:'esports',n:'Esports y eventos'},{id:'noticias',n:'Noticias'}];
 const HOST=location.hostname||'localhost';
+const PERMANENCIA_MIN=150, AVISO_SEG=25, CHAT_MAX=30;
 
 /* ================= Estado ================= */
-let n=1, tiles=[], sel=0, live=new Set(), info={}, avisos=true, vistos=new Set(), cola=[], actual=null, timer=null, anterior=null;
-let sector='ahora', tocado=false, saltos=0;
 const $=s=>document.querySelector(s);
-const store={get(k,d){try{const v=localStorage.getItem('lzd_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('lzd_'+k,JSON.stringify(v))}catch(e){}}};
-avisos=store.get('avisos',true); vistos=new Set(store.get('vistos',[]));
-
+const store={get(k,d){try{const v=localStorage.getItem('lzd2_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('lzd2_'+k,JSON.stringify(v))}catch(e){}}};
 const esTV=s=>s.startsWith('tv:'), esKick=s=>s.startsWith('kick:'), esTwitch=s=>!esTV(s)&&!esKick(s);
-const canal=s=>CANALES.find(x=>x.id===s)||{id:s,n:s,sec:'es'};
+const canal=s=>CANALES.find(c=>c.id===s)||{id:s,n:s,sec:'es'};
 const nombre=s=>canal(s).n;
-const slug=s=>s.replace(/^(kick|tv):/,'');
+const datos={};
+const chat={};
+let modo=store.get('modo','zona'), n=store.get('n',2), tiles=[], sel=0, filtro='todos';
+let avisos=store.get('avisos',true), enZona=null, ultimoCambio=0, actual=null, cola=[], timerAviso=null, vistos=new Set();
+let primeraCarga=true;
+
 function tono(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}
-function avatar(s,cls='av'){const c=canal(s);const ini=esTV(s)?'24h':c.n.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/g,'').slice(0,2);
-  return `<span class="${cls}${esTV(s)?' tv':''}" style="--h:${tono(s)}" aria-hidden="true">${ini}</span>`}
-function plataforma(s){return esTV(s)?'YouTube':esKick(s)?'Kick':'Twitch'}
-function queHace(s){ const c=canal(s); if(esTV(s)) return c.sub; const i=info[s];
-  if(live.has(s)) return i&&i.categoria? i.categoria : 'En directo'; return esKick(s)?'Canal de Kick':'Sin conexión'; }
-function corto(t){const e=$('#corto');e.textContent=t;e.classList.add('si');clearTimeout(e._h);e._h=setTimeout(()=>e.classList.remove('si'),2600)}
+function avatar(s,cls='av'){const c=canal(s);const ini=esTV(s)?'24h':c.n.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/g,'').slice(0,2);return `<span class="${cls}${esTV(s)?' tv':''}" style="--h:${tono(s)}" aria-hidden="true">${ini}</span>`}
+const fmt=v=>v>=1000?(v/1000).toFixed(v>=10000?0:1).replace('.',',')+' mil':String(v);
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('si');clearTimeout(e._h);e._h=setTimeout(()=>e.classList.remove('si'),2600)}
+const vivo=s=>esTV(s)?true:!!(datos[s]&&datos[s].vivo);
+function categoria(s){if(esTV(s))return canal(s).sub;const d=datos[s]||{};if(!d.vivo)return esKick(s)?'Canal de Kick':'Sin conexión';return d.categoria||'En directo'}
 
-/* ================= Reproductores ================= */
-function iframe(src,muted){
-  if(esTV(src)){const c=canal(src);const v=(info[src]&&info[src].video)||c.video;return v?`https://www.youtube.com/embed/${v}?autoplay=1&mute=${muted?1:0}`:`https://www.youtube.com/embed/live_stream?channel=${c.yt}&autoplay=1&mute=${muted?1:0}`;}
-  if(esKick(src)) return `https://player.kick.com/${slug(src)}?autoplay=true&muted=${muted?'true':'false'}`;
-}
-function montar(el,src,muted){
-  el.querySelector('.vid')?.remove();
-  const box=document.createElement('div');box.className='vid';box.id='v'+Math.random().toString(36).slice(2);el.prepend(box);
-  if(!esTwitch(src)){const f=document.createElement('iframe');f.src=iframe(src,muted);
-    f.allow='autoplay; fullscreen; encrypted-media';f.allowFullscreen=true;f.title=nombre(src);box.appendChild(f);return {tipo:'frame',frame:f};}
-  const p=new Twitch.Player(box.id,{channel:src,width:'100%',height:'100%',parent:[HOST],muted:!!muted,autoplay:true});
-  p.addEventListener(Twitch.Player.ONLINE,()=>{live.add(src);pintarLista()});
-  p.addEventListener(Twitch.Player.OFFLINE,()=>{live.delete(src);pintarLista();saltarSiApagado(src)});
-  return {tipo:'tw',player:p};
-}
-function silenciar(i,m){const t=tiles[i];if(!t)return;
-  if(t.h.tipo==='tw'){try{t.h.player.setMuted(m)}catch(e){}}
-  else{const nuevo=iframe(t.src,m); if(t.h.frame.src!==nuevo) t.h.frame.src=nuevo;}}
-function pintarMonitor(i){
-  const t=tiles[i];
-  let r=t.el.querySelector('.rotulo'); if(!r){r=document.createElement('div');r.className='rotulo';t.el.appendChild(r)}
-  r.innerHTML=avatar(t.src)+nombre(t.src);
-  let o=t.el.querySelector('.oir');
-  if(n>1&&i!==sel){ if(!o){o=document.createElement('button');o.className='oir';o.textContent='Escuchar este';o.onclick=()=>{tocado=true;elegir(i)};t.el.appendChild(o)} }
-  else o?.remove();
-  t.el.classList.toggle('antena',i===sel);
-}
-function pintarFicha(){
-  const s=tiles[sel]?.src; if(!s) return;
-  $('#ficha').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><p>${[queHace(s), queHace(s).includes(plataforma(s))?'':plataforma(s), n>1?'se oye este':''].filter(Boolean).join(' · ')}</p></div>`
-    + (anterior&&!tiles.some(t=>t.src===anterior)?`<button class="boton volver" id="volver">↩ Volver a ${nombre(anterior)}</button>`:'');
-  $('#volver')?.addEventListener('click',()=>{const a=anterior;anterior=tiles[sel].src;poner(sel,a);});
-}
-function elegir(i){sel=i;tiles.forEach((_,j)=>{silenciar(j,j!==sel);pintarMonitor(j)});pintarFicha();pintarLista()}
-function poner(i,src){
-  const t=tiles[i]; if(t.src===src) return;
-  if(t.h.tipo==='tw'&&esTwitch(src)){t.h.player.setChannel(src);t.src=src}
-  else{t.src=src;t.h=montar(t.el,src,i!==sel)}
-  pintarMonitor(i);pintarFicha();pintarLista();store.set('tiles',tiles.map(x=>x.src));
-}
+/* ================= Interés de cada directo =================
+   Ritmo del chat en los últimos 30 s frente a su ritmo normal (últimos 5 min). */
+function ritmo(s){const c=chat[s];if(!c)return {r30:0,base:0,calor:1};const now=Date.now();c.t=c.t.filter(t=>now-t<300000);
+  const r30=c.t.filter(t=>now-t<30000).length/30, resto=c.t.filter(t=>now-t>=30000).length, edad=Math.min(270,(now-c.desde)/1000-30);
+  const base=edad>45?resto/edad:r30; return {r30,base,calor:base>0.05?r30/base:1}}
+function puntos(s){const d=datos[s]||{};if(!d.vivo)return -1;const r=ritmo(s);return Math.log10((d.espectadores||0)+10)+Math.min(r.calor,5)*0.55+Math.min(r.r30,15)*0.03}
+function barritas(calor){const k=Math.max(1,Math.min(5,Math.round(calor*1.6)));return `<span class="calor${calor<1.2?' fria':''}">${[1,2,3,4,5].map(i=>`<i class="${i<=k?'on':''}"></i>`).join('')}</span>`}
+function frasechat(s){const c=chat[s];if(!c||!c.ult.length)return '';const cuenta={};
+  c.ult.filter(m=>Date.now()-m.t<20000).forEach(m=>{const k=m.x.trim().toUpperCase().replace(/(.)\1{3,}/g,'$1$1$1').slice(0,28);if(k.length<2)return;cuenta[k]=(cuenta[k]||0)+1});
+  const top=Object.entries(cuenta).sort((a,b)=>b[1]-a[1])[0];if(!top||top[1]<4)return '';
+  if(/(put[ao]|maric|negr|mierd|subnorm|retras|zorr|polla|coñ|http)/i.test(top[0]))return '';return top[0]}
 
-/* Qué poner al entrar: lo que está en directo; si no se sabe, lo típico de esta franja */
-function candidatos(){
-  const f=franja(); const vivos=CANALES.filter(c=>live.has(c.id)).sort((a,b)=>f.orden.indexOf(a.sec)-f.orden.indexOf(b.sec));
-  const porFranja=f.orden.flatMap(sec=>CANALES.filter(c=>c.sec===sec));
-  return [...new Set([...vivos,...porFranja].map(c=>c.id))];
-}
-/* Si al entrar el directo está apagado, pasa solo al siguiente; si no hay nadie, pone el 24 Horas (hasta que el usuario toque algo) */
-function saltarSiApagado(){}
-function comprobarArranque(){
-  if(tocado||saltos>12) return;
-  const t=tiles[sel]; if(!t||!esTwitch(t.src)||live.has(t.src)) return;
-  probados.add(t.src);
-  const ocupados=tiles.map(x=>x.src);
-  const sig=candidatos().find(c=>esTwitch(c)&&!ocupados.includes(c)&&!probados.has(c));
-  saltos++;
-  if(sig&&saltos<=10) poner(sel,sig); else poner(sel,'tv:rtve24h');
-}
-setInterval(comprobarArranque,5000);
-const probados=new Set();
-function layout(nuevo){
-  const prev=tiles.map(t=>t.src);
-  n=nuevo; $('#monitores').className='monitores n'+n;
-  document.querySelectorAll('.vistas button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n===n));
-  const base=prev.length?prev:(store.get('tiles',null)||[]).filter(s=>live.has(s)||!esTwitch(s)||!live.size);
-  const lista=[...new Set([...base,...candidatos()])].slice(0,n);
-  $('#monitores').innerHTML='';tiles=[];if(sel>=n)sel=0;
-  lista.forEach((src,i)=>{const el=document.createElement('div');el.className='monitor';$('#monitores').appendChild(el);
-    tiles.push({src,el,h:montar(el,src,i!==sel)});pintarMonitor(i)});
-  store.set('n',n);pintarFicha();pintarLista();
-}
-
-/* ================= Carril con sectores ================= */
-function filaCanal(c){
-  const enPantalla=tiles.some(t=>t.src===c.id);
-  return `<button class="canal${live.has(c.id)?' vivo':''}" data-src="${c.id}" ${enPantalla?'aria-current="true"':''}>
-    ${avatar(c.id)}<span class="txt"><span class="nom">${c.n}</span><span class="que">${queHace(c.id)}</span></span>
-    ${enPantalla?'<span class="pantalla">En pantalla</span>':''}</button>`;
-}
-function pintarSectores(){
-  const f=franja();
-  $('#sectores').innerHTML=SECTORES.map(s=>{
-    const cuantos=s.id==='ahora'?CANALES.filter(c=>live.has(c.id)).length:CANALES.filter(c=>c.sec===s.id&&live.has(c.id)).length;
-    return `<button role="tab" aria-selected="${sector===s.id}" data-sec="${s.id}">${s.n}${cuantos?`<i>${cuantos}</i>`:''}</button>`}).join('');
-  $('#sectores').querySelectorAll('button').forEach(b=>b.onclick=()=>{sector=b.dataset.sec;pintarLista()});
-  $('#franja').textContent=`${f.n} suele haber más directos en ${SECTORES.find(s=>s.id===f.orden[0]).n}`;
-}
-function pintarLista(){
-  pintarSectores();
-  let html='';
-  if(sector==='ahora'){
-    const vivos=CANALES.filter(c=>live.has(c.id));
-    const f=franja();
-    if(vivos.length) html+=`<div class="grupo">En directo ahora</div>${vivos.map(filaCanal).join('')}`;
-    html+=`<div class="grupo">Lo de esta hora</div>`+CANALES.filter(c=>f.orden.slice(0,2).includes(c.sec)&&c.sec!=='noticias'&&!live.has(c.id)).sort((a,b)=>f.orden.indexOf(a.sec)-f.orden.indexOf(b.sec)).map(filaCanal).join('');
-    html+=`<div class="grupo">Siempre en directo</div>`+CANALES.filter(c=>c.sec==='noticias').map(filaCanal).join('');
-  } else {
-    const lista=CANALES.filter(c=>c.sec===sector).sort((a,b)=>live.has(b.id)-live.has(a.id));
-    html=lista.map(filaCanal).join('');
-  }
-  $('#lista').innerHTML=html;
-  $('#lista').querySelectorAll('.canal').forEach(b=>b.onclick=()=>{tocado=true;irA(b.dataset.src)});
-  pintarFicha();
-}
-function irA(src){const ya=tiles.findIndex(t=>t.src===src);if(ya>=0){elegir(ya);return}anterior=tiles[sel].src;poner(sel,src)}
-
-/* ================= Avisos ================= */
-function encolar(m){
-  if(vistos.has(m.id))return; vistos.add(m.id); store.set('vistos',[...vistos].slice(-200));
-  if(!m.urgente){ if(!avisos)return; if(tiles.some(t=>t.src===m.canal))return;
-    if(m.hora&&(Date.now()-new Date(m.hora))/60000>MAX_EDAD_MIN)return; }
-  m.urgente?cola.unshift(m):cola.push(m); if(!actual)siguiente();
-}
-function siguiente(){
-  actual=cola.shift(); if(!actual)return;
-  const m=actual, p=$('#previo');
-  p.classList.toggle('urgente',!!m.urgente);
-  $('#pAv').outerHTML=avatar(m.canal).replace('class="av','id="pAv" class="av');
-  $('#pEstado').textContent=m.urgente?'Última hora':(m.multiplicador>=6?'Está explotando ahora':'Está pasando ahora');
-  $('#pTema').textContent=m.tema||nombre(m.canal);
-  $('#pFrase').innerHTML=[m.resumen||m.titulo||'', m.categoria?`<b>${m.categoria}</b>`:''].filter(Boolean).join(' · ');
-  const tele=$('#pTele'); tele.innerHTML='';
-  if(!esTwitch(m.canal)){tele.innerHTML=`<iframe title="${nombre(m.canal)}" src="${iframe(m.canal,true)}" allow="autoplay; encrypted-media"></iframe>`}
-  else if(m.clip){tele.innerHTML=`<iframe title="Clip" src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(m.clip)}&parent=${HOST}&autoplay=true&muted=true" allowfullscreen></iframe>`}
-  else{const d=document.createElement('div');d.id='pTw';tele.appendChild(d);new Twitch.Player('pTw',{channel:m.canal,width:'100%',height:'100%',parent:[HOST],muted:true,autoplay:true})}
-  $('#pCambiar').textContent=m.urgente?'Ver la última hora':'Cambiar a este directo';
-  p.classList.add('si');p.setAttribute('aria-hidden','false');
-  const r=$('#pReloj'); r.style.transition='none'; r.style.strokeDashoffset='0';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{r.style.transition=`stroke-dashoffset ${AVISO_SEG}s linear`;r.style.strokeDashoffset='94.25'}));
-  clearTimeout(timer); timer=setTimeout(()=>cerrar(false),AVISO_SEG*1000);
-}
-function cerrar(cambiar){
-  clearTimeout(timer); const m=actual, p=$('#previo');
-  p.classList.remove('si');p.setAttribute('aria-hidden','true');setTimeout(()=>{$('#pTele').innerHTML=''},450);
-  if(cambiar&&m){tocado=true;anterior=tiles[sel].src;poner(sel,m.canal);silenciar(sel,false);corto('Ahora ves a '+nombre(m.canal))}
-  actual=null; setTimeout(siguiente,900);
-}
-$('#pCambiar').onclick=()=>cerrar(true); $('#pSeguir').onclick=()=>cerrar(false);
-document.addEventListener('keydown',e=>{if(!actual)return;if(e.key==='Escape')cerrar(false)});
-
-/* ================= Lo que manda el motor ================= */
-async function leerEstado(){
-  try{
-    const r=await fetch(ESTADO_URL+'?t='+Date.now(),{cache:'no-store'}); if(!r.ok)return; const e=await r.json();
-    if(Array.isArray(e.en_directo)&&e.actualizado){live=new Set([...e.en_directo,...[...live].filter(x=>tiles.some(t=>t.src===x))]);}
-    if(e.info) info=e.info;
-    pintarLista();
-    (e.momentos||[]).forEach(encolar);
-    const uh=e.ultima_hora;
-    if(uh&&uh.id){$('#ultimaTxt').textContent=uh.titulo||'';$('#ultima').classList.add('si');$('#ultimaVer').onclick=()=>irA(uh.canal);encolar({...uh,urgente:true})}
-    else $('#ultima').classList.remove('si');
-  }catch(err){}
-}
-
-/* ================= Quién está en directo (sin motor) =================
-   Pregunta a decapi.me si cada canal de Twitch está en directo y a qué juega. */
+/* ================= Quién está en directo (decapi.me) ================= */
 async function comprobarDirectos(){
   const tw=CANALES.filter(c=>esTwitch(c.id)).map(c=>c.id);
-  const res=await Promise.all(tw.map(async c=>{
-    try{const t=await (await fetch('https://decapi.me/twitch/uptime/'+c,{cache:'no-store'})).text();
-      return [c,!/offline|error|not found/i.test(t)]}catch(e){return [c,null]}
+  await Promise.all(tw.map(async c=>{
+    try{const t=(await (await fetch('https://decapi.me/twitch/viewercount/'+c,{cache:'no-store'})).text()).trim();
+      const d=datos[c]=datos[c]||{};
+      if(/^\d+$/.test(t)){const nuevo=!d.vivo;d.vivo=true;d.espectadores=+t;if(nuevo||!d.categoria)d.pedirCat=true}
+      else if(/offline/i.test(t)){d.vivo=false;d.espectadores=0}
+    }catch(e){}
   }));
-  for(const [c,v] of res){ if(v===true) live.add(c); else if(v===false) live.delete(c); }
-  const vivos=res.filter(r=>r[1]).map(r=>r[0]);
-  await Promise.all(vivos.map(async c=>{
+  await Promise.all(tw.filter(c=>datos[c]&&datos[c].vivo&&(datos[c].pedirCat||!datos[c].catHora||Date.now()-datos[c].catHora>600000)).map(async c=>{
     try{const g=(await (await fetch('https://decapi.me/twitch/game/'+c,{cache:'no-store'})).text()).trim();
-      if(g&&!/error/i.test(g)) info[c]={...(info[c]||{}),categoria:g==='Just Chatting'?'Charlando':g}}catch(e){}
+      if(g&&!/error|offline/i.test(g)){datos[c].categoria=g==='Just Chatting'?'Charlando':g;datos[c].catHora=Date.now();datos[c].pedirCat=false}}catch(e){}
   }));
-  pintarLista();
+  conectarChats(); pintarTodo();
 }
 
-/* ================= Controles ================= */
-document.querySelectorAll('.vistas button').forEach(b=>b.onclick=()=>{tocado=true;layout(+b.dataset.n)});
-function pintarAvisos(){const b=$('#avisos');b.setAttribute('aria-pressed',avisos);b.querySelector('.txt').textContent=avisos?'Avisos activados':'Avisos desactivados'}
-$('#avisos').onclick=()=>{avisos=!avisos;store.set('avisos',avisos);pintarAvisos();corto(avisos?'Te avisaremos cuando pase algo':'Sin avisos: te quedas en tu directo')};
-$('#probar').onclick=()=>{
-  const libres=CANALES.filter(c=>c.sec!=='noticias'&&!tiles.some(t=>t.src===c.id)); const c=(libres.find(s=>live.has(s.id))||libres[Math.floor(Math.random()*libres.length)]);
-  const ej=[
-    {tema:`${c.n} sobre la vivienda`,resumen:'Se enfada con el precio de los alquileres',categoria:'Just Chatting',multiplicador:4.4},
-    {tema:`${c.n} jugando a Among Us`,resumen:'Le pillan de impostor en la última ronda',categoria:'Among Us',multiplicador:6.2},
-    {tema:`${c.n} reacciona a la noticia del día`,resumen:'Opina en directo sobre lo que está pasando',categoria:'Just Chatting',multiplicador:4.1}
-  ][Math.floor(Math.random()*3)];
-  encolar({id:'demo-'+Date.now(),canal:c.id,...ej,hora:new Date().toISOString()});
-};
+/* ================= Chat de Twitch (lectura anónima) ================= */
+let ws=null, unidos=new Set();
+function conectarChats(){
+  const quiero=CANALES.filter(c=>esTwitch(c.id)&&vivo(c.id)).sort((a,b)=>(datos[b.id].espectadores||0)-(datos[a.id].espectadores||0)).slice(0,CHAT_MAX).map(c=>c.id);
+  if(!ws||ws.readyState>1){
+    ws=new WebSocket('wss://irc-ws.chat.twitch.tv:443'); unidos=new Set();
+    ws.onopen=()=>{ws.send('PASS SCHMOOPIIE');ws.send('NICK justinfan'+Math.floor(Math.random()*80000+10000));sincronizar(quiero)};
+    ws.onmessage=e=>{for(const l of e.data.split('\r\n')){if(!l)continue;if(l.startsWith('PING')){ws.send('PONG :tmi.twitch.tv');continue}
+      const m=l.match(/PRIVMSG #(\S+) :(.*)$/);if(!m)continue;const c=chat[m[1]]=chat[m[1]]||{t:[],ult:[],desde:Date.now()};c.t.push(Date.now());c.ult.push({t:Date.now(),x:m[2]});if(c.ult.length>120)c.ult.splice(0,40)}};
+    ws.onclose=()=>setTimeout(conectarChats,5000);
+  } else if(ws.readyState===1) sincronizar(quiero);
+}
+function sincronizar(quiero){
+  const entrar=quiero.filter(c=>!unidos.has(c)), salir=[...unidos].filter(c=>!quiero.includes(c));
+  if(salir.length){ws.send('PART '+salir.map(c=>'#'+c).join(','));salir.forEach(c=>{unidos.delete(c);delete chat[c]})}
+  if(entrar.length){ws.send('JOIN '+entrar.map(c=>'#'+c).join(','));entrar.forEach(c=>{unidos.add(c);chat[c]=chat[c]||{t:[],ult:[],desde:Date.now()}})}
+}
+
+/* ================= Reproductores ================= */
+function urlFrame(s,muted){if(esTV(s)){const c=canal(s);return `https://www.youtube.com/embed/${c.video}?autoplay=1&mute=${muted?1:0}`}
+  return `https://player.kick.com/${s.slice(5)}?autoplay=true&muted=${muted?'true':'false'}`}
+function montar(el,s,muted){
+  el.querySelector('.vid')?.remove();
+  const box=document.createElement('div');box.className='vid';box.id='v'+Math.random().toString(36).slice(2);el.prepend(box);
+  if(!esTwitch(s)){const f=document.createElement('iframe');f.src=urlFrame(s,muted);f.allow='autoplay; fullscreen; encrypted-media';f.allowFullscreen=true;f.title=nombre(s);box.appendChild(f);return {tipo:'frame',f}}
+  const p=new Twitch.Player(box.id,{channel:s,width:'100%',height:'100%',parent:[HOST],muted:!!muted,autoplay:true});return {tipo:'tw',p};
+}
+function silenciar(i,m){const t=tiles[i];if(!t)return;if(t.h.tipo==='tw'){try{t.h.p.setMuted(m)}catch(e){}}else{const u=urlFrame(t.src,m);if(t.h.f.src!==u)t.h.f.src=u}}
+function poner(i,s){const t=tiles[i];if(!t||t.src===s)return;
+  if(t.h.tipo==='tw'&&esTwitch(s)){t.h.p.setChannel(s);t.src=s}else{t.src=s;t.h=montar(t.el,s,i!==sel)}
+  if(modo!=='zona')store.set('tiles',tiles.map(x=>x.src));pintarTodo()}
+function construir(){
+  const cuantos=modo==='multi'?n:1;
+  const mon=$('#monitores');mon.className='monitores n'+cuantos;mon.innerHTML='';
+  let lista;
+  if(modo==='zona') lista=[mejores()[0]||'tv:rtve24h'];
+  else{const guard=store.get('tiles',[]).filter(s=>vivo(s));lista=[...new Set([...guard,...mejores()])].slice(0,cuantos);if(!lista.length)lista=['tv:rtve24h']}
+  if(modo==='zona'){enZona=lista[0];ultimoCambio=Date.now()}
+  tiles=[];sel=Math.min(sel,cuantos-1);
+  lista.forEach((s,i)=>{const el=document.createElement('div');el.className='monitor';
+    el.innerHTML=`<span class="etiqueta"></span>${modo==='zona'?'<div class="cortinilla" id="cort"><div><small>Cambiando a</small><strong id="cortNom"></strong><p id="cortPor"></p></div></div>':''}`;
+    mon.appendChild(el);tiles.push({src:s,el,h:montar(el,s,i!==sel)})});
+  pintarTodo();
+}
+function mejores(){return CANALES.filter(c=>esTwitch(c.id)&&vivo(c.id)).sort((a,b)=>puntos(b.id)-puntos(a.id)).map(c=>c.id)}
+
+/* ================= Canal La Zona: decide qué poner ================= */
+function decidirZona(){
+  if(modo!=='zona')return;
+  const best=mejores()[0];
+  if(!best){if(enZona!=='tv:rtve24h')cambiarZona('tv:rtve24h');return}
+  if(best===enZona)return;
+  const cur=enZona, pc=vivo(cur)&&!esTV(cur)?puntos(cur):-1, pb=puntos(best), seg=(Date.now()-ultimoCambio)/1000;
+  if(pc<0) return cambiarZona(best);
+  if(seg>=PERMANENCIA_MIN && pb>pc*1.18) return cambiarZona(best);
+  if(seg>=60 && ritmo(best).calor>=3.2 && pb>pc) return cambiarZona(best);
+}
+function motivo(s){const d=datos[s]||{},r=ritmo(s);const partes=[];if(d.espectadores)partes.push(fmt(d.espectadores)+' espectadores');
+  if(r.calor>=1.8)partes.push(`el chat va ${r.calor.toFixed(1).replace('.',',')} veces más rápido de lo normal`);const f=frasechat(s);if(f)partes.push(`el chat grita «${f}»`);return partes.join(' · ')}
+function cambiarZona(s){
+  const c=$('#cort');if(c){$('#cortNom').textContent=nombre(s);$('#cortPor').textContent=categoria(s);c.classList.add('si');setTimeout(()=>c.classList.remove('si'),2600)}
+  setTimeout(()=>{enZona=s;ultimoCambio=Date.now();poner(0,s)},900);
+}
+
+/* ================= Avisos de momentos en otros directos ================= */
+const ultimoAviso={};
+function buscarMomentos(){
+  if(!avisos)return;
+  for(const c of CANALES){const s=c.id;if(!esTwitch(s)||!vivo(s)||tiles.some(t=>t.src===s))continue;
+    const r=ritmo(s);if(r.calor<3||r.r30<0.7)continue;if(ultimoAviso[s]&&Date.now()-ultimoAviso[s]<600000)continue;
+    if(modo==='zona'&&(Date.now()-ultimoCambio)/1000>=60&&puntos(s)>puntos(enZona)){decidirZona();return}
+    ultimoAviso[s]=Date.now();const f=frasechat(s);
+    encolar({id:s+'-'+Date.now(),canal:s,tema:`Se está liando con ${nombre(s)}`,resumen:[categoria(s),f?`el chat grita «${f}»`:`chat ${r.calor.toFixed(1).replace('.',',')} veces más rápido`].join(' · ')});return}
+}
+function encolar(m){if(vistos.has(m.id))return;vistos.add(m.id);if(!m.urgente&&tiles.some(t=>t.src===m.canal))return;m.urgente?cola.unshift(m):cola.push(m);if(!actual)siguiente()}
+function siguiente(){actual=cola.shift();if(!actual)return;const m=actual,p=$('#previo');
+  $('#pAv').outerHTML=avatar(m.canal).replace('class="av','id="pAv" class="av');
+  $('#pEstado').textContent=m.urgente?'Última hora':'Está pasando ahora';$('#pTema').textContent=m.tema||nombre(m.canal);$('#pFrase').textContent=m.resumen||'';
+  const tele=$('#pTele');tele.innerHTML='';
+  if(!esTwitch(m.canal))tele.innerHTML=`<iframe title="${nombre(m.canal)}" src="${urlFrame(m.canal,true)}" allow="autoplay; encrypted-media"></iframe>`;
+  else if(m.clip)tele.innerHTML=`<iframe title="Clip" src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(m.clip)}&parent=${HOST}&autoplay=true&muted=true"></iframe>`;
+  else{const d=document.createElement('div');d.id='pTw';tele.appendChild(d);new Twitch.Player('pTw',{channel:m.canal,width:'100%',height:'100%',parent:[HOST],muted:true,autoplay:true})}
+  p.classList.add('si');p.setAttribute('aria-hidden','false');
+  const r=$('#pReloj');r.style.transition='none';r.style.strokeDashoffset='0';requestAnimationFrame(()=>requestAnimationFrame(()=>{r.style.transition=`stroke-dashoffset ${AVISO_SEG}s linear`;r.style.strokeDashoffset='94.25'}));
+  clearTimeout(timerAviso);timerAviso=setTimeout(()=>cerrar(false),AVISO_SEG*1000)}
+function cerrar(cambiar){clearTimeout(timerAviso);const m=actual,p=$('#previo');p.classList.remove('si');p.setAttribute('aria-hidden','true');setTimeout(()=>{$('#pTele').innerHTML=''},450);
+  if(cambiar&&m){if(modo==='zona'){enZona=m.canal;ultimoCambio=Date.now();poner(0,m.canal)}else{poner(sel,m.canal)}silenciar(sel,false);toast('Ahora ves a '+nombre(m.canal))}
+  actual=null;setTimeout(siguiente,900)}
+$('#pCambiar').onclick=()=>cerrar(true);$('#pSeguir').onclick=()=>cerrar(false);
+
+/* ================= Pintar ================= */
+function pintarTodo(){pintarMonitores();pintarBarra();pintarRanking();pintarRejilla()}
+function pintarMonitores(){tiles.forEach((t,i)=>{t.el.classList.toggle('antena',i===sel);const e=t.el.querySelector('.etiqueta');
+  e.textContent=modo==='zona'?'● Canal La Zona':nombre(t.src);
+  let o=t.el.querySelector('.oir');if(modo==='multi'&&i!==sel){if(!o){o=document.createElement('button');o.className='oir';o.textContent='Escuchar este';o.onclick=()=>{sel=i;tiles.forEach((_,j)=>silenciar(j,j!==sel));pintarTodo()};t.el.appendChild(o)}}else o?.remove()})}
+function pintarBarra(){
+  const s=tiles[sel]?.src;if(!s)return;const d=datos[s]||{};
+  const meta=[vivo(s)&&!esTV(s)?`<span class="sello">En directo</span>`:'',`<span>${categoria(s)}</span>`,d.espectadores?`<span><b>${fmt(d.espectadores)}</b> viendo</span>`:'',esTwitch(s)&&chat[s]?`<span>Chat ${barritas(ritmo(s).calor)}</span>`:''].filter(Boolean).join('');
+  const acc=modo==='zona'?`<button class="boton" id="bQuedar">Quedarme en este directo</button>`:`<button class="boton prim" id="bZona">Volver al Canal La Zona</button>`;
+  $('#barra').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><div class="meta">${meta}</div></div><div class="acciones">${acc}</div>`;
+  $('#bQuedar')?.addEventListener('click',()=>{store.set('tiles',[s]);ponerModo('uno')});
+  $('#bZona')?.addEventListener('click',()=>ponerModo('zona'));
+  const por=$('#porque');
+  if(modo==='zona'){por.hidden=false;const m=motivo(s);por.innerHTML=esTV(s)?'Ahora mismo hay poco en directo, así que el Canal La Zona pone las noticias 24 horas. En cuanto empiece algo fuerte, cambia solo.':`<b>Por qué estás viendo esto:</b> es el directo con más tirón ahora mismo${m?' · '+m:''}. El Canal La Zona cambia solo cuando otro directo se pone más interesante.`}
+  else por.hidden=true;
+}
+function pintarRanking(){
+  const top=mejores().slice(0,7);
+  $('#ranking').innerHTML=top.length?top.map((s,i)=>{const d=datos[s];return `<button class="fila" data-src="${s}" ${tiles.some(t=>t.src===s)?'aria-current="true"':''}><span class="pos">${i+1}</span>${avatar(s)}<span style="min-width:0"><span class="nom">${nombre(s)}</span><span class="cat">${categoria(s)}</span></span><span class="dato">${fmt(d.espectadores||0)}<small>${barritas(ritmo(s).calor)}</small></span></button>`}).join('')
+    :`<div class="vacio">Ahora mismo no hay ningún directo grande. Te avisamos en cuanto empiece alguien.</div>`;
+  $('#ranking').querySelectorAll('.fila').forEach(b=>b.onclick=()=>verDirecto(b.dataset.src));
+}
+function miniatura(s){if(!esTwitch(s)||!vivo(s))return '';const t=Math.floor(Date.now()/120000);return `<img loading="lazy" alt="" src="https://static-cdn.jtvnw.net/previews-ttv/live_user_${s}-440x248.jpg?t=${t}">`}
+function pintarRejilla(){
+  $('#filtros').innerHTML=FILTROS.map(f=>`<button data-f="${f.id}" aria-pressed="${filtro===f.id}">${f.n}</button>`).join('');
+  $('#filtros').querySelectorAll('button').forEach(b=>b.onclick=()=>{filtro=b.dataset.f;pintarRejilla()});
+  let lista=CANALES.filter(c=>filtro==='todos'?(vivo(c.id)&&!esTV(c.id)):c.sec===filtro);
+  lista.sort((a,b)=>puntos(b.id)-puntos(a.id));
+  const nv=CANALES.filter(c=>esTwitch(c.id)&&vivo(c.id)).length;
+  $('#resumen').textContent=nv?`${nv} directos en marcha ahora · toca uno para verlo`:'Ahora mismo hay muy poco en directo · el Canal La Zona te pone las noticias';
+  $('#rejilla').innerHTML=lista.map(c=>{const s=c.id,d=datos[s]||{},r=ritmo(s),v=vivo(s);
+    return `<button class="tarjeta${v||esKick(s)?'':' apagada'}" data-src="${s}"><div class="mini">${miniatura(s)||`<div class="sin">${esTV(s)?'24 h':esKick(s)?'KICK':'Sin directo'}</div>`}
+      ${v&&!esTV(s)?`<span class="sello">En directo</span><span class="viendo">${fmt(d.espectadores||0)}</span>`:''}${v&&r.calor>=2?`<span class="fuego">Chat ×${r.calor.toFixed(1).replace('.',',')}</span>`:''}</div>
+      <div class="info">${avatar(s)}<div style="min-width:0"><b>${c.n}</b><span>${categoria(s)}</span></div></div></button>`}).join('')||`<div class="vacio">Aquí no hay nadie en directo ahora mismo.</div>`;
+  $('#rejilla').querySelectorAll('.tarjeta').forEach(b=>b.onclick=()=>verDirecto(b.dataset.src));
+}
+function verDirecto(s){
+  if(modo==='zona'){store.set('tiles',[s]);ponerModo('uno');window.scrollTo({top:0,behavior:'smooth'});return}
+  const ya=tiles.findIndex(t=>t.src===s);if(ya>=0){sel=ya;tiles.forEach((_,j)=>silenciar(j,j!==sel));pintarTodo();return}
+  poner(sel,s);silenciar(sel,false);window.scrollTo({top:0,behavior:'smooth'});
+}
+function ponerModo(m){modo=m;store.set('modo',m);if(m==='multi'&&n<2)n=2;
+  document.querySelectorAll('.modos button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.modo===m));construir()}
+document.querySelectorAll('.modos button').forEach(b=>b.onclick=()=>{if(b.dataset.modo==='multi'&&modo==='multi'){n=n===2?4:2;store.set('n',n)}ponerModo(b.dataset.modo)});
+function pintarAvisos(){$('#avisos').setAttribute('aria-pressed',avisos)}
+$('#avisos').onclick=()=>{avisos=!avisos;store.set('avisos',avisos);pintarAvisos();toast(avisos?'Te avisaremos cuando pase algo en otro directo':'Sin avisos: te quedas tranquilo en tu directo')};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&actual)cerrar(false)});
+
+/* ================= Lo que manda el motor (estado.json) ================= */
+async function leerEstado(){try{const e=await (await fetch('estado.json?t='+Date.now(),{cache:'no-store'})).json();
+  (e.momentos||[]).forEach(m=>{if(!m.hora||(Date.now()-new Date(m.hora))/60000<10)encolar(m)});
+  if(e.ultima_hora&&e.ultima_hora.id)encolar({...e.ultima_hora,urgente:true,tema:e.ultima_hora.titulo||'Última hora'})}catch(err){}}
 
 /* ================= Arranque ================= */
-pintarAvisos(); sector='ahora';
-(async()=>{ await Promise.race([comprobarDirectos(), new Promise(r=>setTimeout(r,3500))]); layout(store.get('n',1)); leerEstado(); })();
-setInterval(leerEstado,POLL_MS); setInterval(comprobarDirectos,3*60*1000);
-setInterval(pintarSectores,10*60*1000);
+(async()=>{
+  pintarAvisos();
+  document.querySelectorAll('.modos button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.modo===modo));
+  await Promise.race([comprobarDirectos(),new Promise(r=>setTimeout(r,4000))]);
+  construir(); primeraCarga=false;
+  if(new URLSearchParams(location.search).has('demo')){const s=mejores()[1]||'ibai';setTimeout(()=>encolar({id:'demo',canal:s,tema:`Se está liando con ${nombre(s)}`,resumen:categoria(s)+' · el chat grita «NOOOO»'}),2500)}
+  leerEstado();
+  setInterval(comprobarDirectos,90000);
+  setInterval(()=>{decidirZona();buscarMomentos();pintarBarra();pintarRanking()},10000);
+  setInterval(pintarRejilla,30000);
+  setInterval(leerEstado,20000);
+})();
 </script>
 </body>
 </html>
