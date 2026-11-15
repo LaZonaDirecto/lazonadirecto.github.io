@@ -264,7 +264,7 @@ const datos={};
 const chat={};
 let modo=store.get('modo','zona'), n=store.get('n',2), tiles=[], sel=0, filtro='todos';
 let avisos=store.get('avisos',true), enZona=null, ultimoCambio=0, actual=null, cola=[], timerAviso=null, vistos=new Set();
-let primeraCarga=true, sonido=false, arrancado=false, portadaSrc=null;
+let primeraCarga=true, sonido=true, arrancado=true, portadaSrc=null;
 
 function tono(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}
 function avatar(s,cls='av'){const c=canal(s);const ini=esTV(s)?'24h':c.n.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/g,'').slice(0,2);return `<span class="${cls}${esTV(s)?' tv':''}" style="--h:${tono(s)}" aria-hidden="true">${ini}</span>`}
