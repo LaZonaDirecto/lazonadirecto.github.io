@@ -3,6 +3,13 @@
 Web multiview de directos en español: https://lazonadirecto.github.io (GitHub Pages, rama `main`; cada push se publica en ~1 min).
 El dueño es Aka Rikk. Habla en español: responde y escribe todo (código, comentarios, textos de la web) en español de España.
 
+## Cómo funciona (versión actual)
+- Tres modos: **Canal La Zona** (automático: pone el directo con más tirón y cambia solo; permanencia mínima 150 s, cambia si otro supera ×1,18 en puntos o si el chat de otro se dispara ×3,2), **Elegir directo** y **Multivista** (2 o 4).
+- Puntos = log10(espectadores+10) + calor del chat×0,55 + mensajes/s×0,03. Calor = ritmo del chat en 30 s frente a sus 5 min anteriores.
+- Quién está en directo: SOLO decapi.me `/twitch/viewercount/<canal>` (número = en directo). No usar los eventos ONLINE/OFFLINE del reproductor de Twitch: fallan (marcaban a Auron en directo y a Rubius sin conexión).
+- Chat: lectura anónima por IRC (`wss://irc-ws.chat.twitch.tv`, `justinfan…`) de los 30 directos con más gente. Si un chat se dispara, aviso abajo a la derecha.
+- `?demo` en la URL saca un aviso de prueba.
+
 ## Qué es
 - El espectador ve 1, 2 o 4 directos a la vez (Twitch, Kick y YouTube) de streamers hispanohablantes.
 - Cuando el motor detecta un momento fuerte en otro canal, sale un aviso abajo a la derecha (mini reproductor) con un titular de qué va ("Xokas sobre Abascal", "Auron jugando a Among Us") y los botones **Cambiar a este directo** / **Seguir aquí**. Nunca se cambia de directo sin que el espectador lo pida.
