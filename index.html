@@ -281,11 +281,12 @@ async function comprobarDirectos(){
       else if(/offline/i.test(t)){d.vivo=false;d.espectadores=0}
     }catch(e){}
   }));
+  conectarChats(); pintarTodo(); if(!primeraCarga)decidirZona();
   await Promise.all(tw.filter(c=>datos[c]&&datos[c].vivo&&(datos[c].pedirCat||!datos[c].catHora||Date.now()-datos[c].catHora>600000)).map(async c=>{
     try{const g=(await (await fetch('https://decapi.me/twitch/game/'+c,{cache:'no-store'})).text()).trim();
       if(g&&!/error|offline/i.test(g)){datos[c].categoria=g==='Just Chatting'?'Charlando':g;datos[c].catHora=Date.now();datos[c].pedirCat=false}}catch(e){}
   }));
-  conectarChats(); pintarTodo();
+  pintarTodo();
 }
 
 /* ================= Chat de Twitch (lectura anónima) ================= */
@@ -435,7 +436,7 @@ async function leerEstado(){try{const e=await (await fetch('estado.json?t='+Date
 (async()=>{
   pintarAvisos();
   document.querySelectorAll('.modos button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.modo===modo));
-  await Promise.race([comprobarDirectos(),new Promise(r=>setTimeout(r,4000))]);
+  await Promise.race([comprobarDirectos(),new Promise(r=>setTimeout(r,7000))]);
   construir(); primeraCarga=false;
   if(new URLSearchParams(location.search).has('demo')){const s=mejores()[1]||'ibai';setTimeout(()=>encolar({id:'demo',canal:s,tema:`Se está liando con ${nombre(s)}`,resumen:categoria(s)+' · el chat grita «NOOOO»'}),2500)}
   leerEstado();
