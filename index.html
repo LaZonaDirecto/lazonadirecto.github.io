@@ -128,7 +128,7 @@ img{display:block}
 .tarjeta .mini img{width:100%;height:100%;object-fit:cover}
 .tarjeta .mini .sello{position:absolute;left:10px;top:10px;background:rgba(7,11,28,.82);backdrop-filter:blur(6px)}
 .tarjeta .mini .viendo{position:absolute;right:10px;top:10px;padding:5px 9px;border-radius:999px;background:var(--pgm);font-size:11.5px;font-weight:800}
-.tarjeta .mini .fuego{position:absolute;right:10px;bottom:10px;padding:5px 9px;border-radius:999px;background:rgba(7,11,28,.82);font-size:11.5px;font-weight:800;color:#FFB4C3}
+.tarjeta .mini .fuego{max-width:calc(100% - 20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:absolute;right:10px;bottom:10px;padding:5px 9px;border-radius:999px;background:rgba(7,11,28,.82);font-size:11.5px;font-weight:800;color:#FFB4C3}
 .tarjeta .mini .sin{position:absolute;inset:0;display:grid;place-items:center;color:var(--tenue);font-weight:800;font-family:var(--display);font-size:22px}
 .tarjeta .info{display:flex;gap:11px;align-items:center;padding:12px 14px 14px}
 .tarjeta .info .av{width:36px;height:36px;font-size:13px}
@@ -206,7 +206,7 @@ img{display:block}
     </div>
     <aside class="ranking" aria-label="Lo más fuerte ahora">
       <h2>Lo más fuerte ahora</h2>
-      <p class="sub">Por espectadores y actividad del chat</p>
+      <p class="sub">Lo que está pasando en el chat, no solo cuánta gente hay</p>
       <div id="ranking"></div>
     </aside>
   </section>
@@ -274,16 +274,55 @@ const vivo=s=>esTV(s)?true:!!(datos[s]&&datos[s].vivo);
 function categoria(s){if(esTV(s))return canal(s).sub;const d=datos[s]||{};if(!d.vivo)return esKick(s)?'Canal de Kick':'Sin conexión';return d.categoria||'En directo'}
 
 /* ================= Interés de cada directo =================
-   Ritmo del chat en los últimos 30 s frente a su ritmo normal (últimos 5 min). */
-function ritmo(s){const c=chat[s];if(!c)return {r30:0,base:0,calor:1};const now=Date.now();c.t=c.t.filter(t=>now-t<300000);
-  const r30=c.t.filter(t=>now-t<30000).length/30, resto=c.t.filter(t=>now-t>=30000).length, edad=Math.min(270,(now-c.desde)/1000-30);
-  const base=edad>45?resto/edad:r30; return {r30,base,calor:base>0.05?r30/base:1}}
-function puntos(s){const d=datos[s]||{};if(!d.vivo)return -1;const r=ritmo(s);return Math.log10((d.espectadores||0)+10)+Math.min(r.calor,5)*0.55+Math.min(r.r30,15)*0.03}
-function barritas(calor){const k=Math.max(1,Math.min(5,Math.round(calor*1.6)));return `<span class="calor${calor<1.2?' fria':''}">${[1,2,3,4,5].map(i=>`<i class="${i<=k?'on':''}"></i>`).join('')}</span>`}
-function frasechat(s){const c=chat[s];if(!c||!c.ult.length)return '';const cuenta={};
-  c.ult.filter(m=>Date.now()-m.t<20000).forEach(m=>{const k=m.x.trim().toUpperCase().replace(/(.)\1{3,}/g,'$1$1$1').slice(0,28);if(k.length<2)return;cuenta[k]=(cuenta[k]||0)+1});
-  const top=Object.entries(cuenta).sort((a,b)=>b[1]-a[1])[0];if(!top||top[1]<4)return '';
-  if(/(put[ao]|maric|negr|mierd|subnorm|retras|zorr|polla|coñ|http)/i.test(top[0]))return '';return top[0]}
+   "Momento" (0 a 1): mide si está pasando algo, no solo cuánta gente hay.
+   Señales del chat en los últimos 30 s frente a lo normal en ese mismo canal (5 min):
+   ritmo de mensajes, personas distintas escribiendo, reacciones (risas, NOOO, ???),
+   todo el chat repitiendo lo mismo, subs/bits/raids y espectadores que llegan. */
+const STOP=new Set(('que del los las por con para una uno unos unas como pero mas muy este esta esto eso ese esa son ser hay tiene tienen estoy estan todo todos toda nada algo porque cuando donde quien cual vaya pues bueno vale hola gracias buenas tarde tardes noches noche dias chat stream directo hermano bro tio men mano wey tambien solo ahora aqui alli asi sus les nos ver hace hacer eres soy fue era van vas voy dice dijo the and you this that what puto puta joder hostia madre mierda verdad igual tengo tiene tenia sabe saber cosa cosas mejor peor otro otra otros mismo mucho mucha poco siempre nunca hasta desde entre sobre luego antes despues jajaja jajajaja xddd chavales gente mira mirad quiero quieres puede puedo creo dale').split(' '));
+const REACC=/^(?:(?:ja|je|ji|js|ks|ka)+j?|x+d+|k+e+k+w*|lu+l|omegalul|lmao+|icant|pog\w*|wtf+|no+|si+|f|w|l|\?+|!+|\+1|\+2|monkas|pepelaugh|kappa|ez+|gg+|lets+ ?go+|vamo+s*|madre mia|que+ ?pasa+|ostia+|hostia+|bruh)$|[😂🤣💀😭🔥😱]/i;
+const MALAS=/(put[ao]|maric|negr|mierd|subnorm|retras|zorr|polla|coñ|http|sudaca|panchit)/i;
+const cl=x=>Math.max(0,Math.min(1,x));
+const coma=x=>x.toFixed(1).replace('.',',');
+function nuevoChat(){return {m:[],ev:[],desde:Date.now(),a:null,ema:null}}
+function analizar(s){const c=chat[s];if(!c)return null;const now=Date.now();
+  c.m=c.m.filter(m=>now-m.t<300000);c.ev=c.ev.filter(e=>now-e.t<300000);
+  const edad=Math.min(270,(now-c.desde)/1000-30);
+  const rec=c.m.filter(m=>now-m.t<30000), viejo=c.m.filter(m=>now-m.t>=30000);
+  const r30=rec.length/30, base=edad>45?viejo.length/edad:r30, calor=base>0.05?r30/base:1;
+  const u30=new Set(rec.map(m=>m.u)).size;let ubase=u30;
+  if(edad>45){const cub={};viejo.forEach(m=>{const k=Math.floor((now-m.t)/30000);(cub[k]=cub[k]||new Set()).add(m.u)});const vs=Object.values(cub).map(x=>x.size);if(vs.length)ubase=vs.reduce((a,b)=>a+b,0)/vs.length}
+  const reacc=rec.length?rec.filter(m=>m.r).length/rec.length:0, reaccBase=viejo.length>20?viejo.filter(m=>m.r).length/viejo.length:reacc;
+  const r20=c.m.filter(m=>now-m.t<20000), cuenta={};r20.forEach(m=>{if(m.k)(cuenta[m.k]=cuenta[m.k]||new Set()).add(m.u)});
+  const top=Object.entries(cuenta).map(([k,v])=>[k,v.size]).sort((a,b)=>b[1]-a[1])[0];
+  const autores=new Set(r20.map(m=>m.u)).size, unanim=top&&top[1]>=4&&autores?top[1]/autores:0;
+  const frase=top&&top[1]>=4&&!MALAS.test(top[0])?top[0]:'';
+  const ev2=c.ev.filter(e=>now-e.t<120000), evPeso=ev2.reduce((a,e)=>a+e.w,0);
+  const subs=ev2.filter(e=>e.k==='sub').reduce((a,e)=>a+e.n,0), raid=ev2.filter(e=>e.k==='raid').pop()||null, bits=ev2.filter(e=>e.k==='bits').reduce((a,e)=>a+e.n,0);
+  const pal={};c.m.filter(m=>now-m.t<60000&&!m.r).forEach(m=>{new Set(m.x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').match(/[a-zñ0-9]{4,}/g)||[]).forEach(w=>{if(STOP.has(w)||/^(ja|je|xd|js|kek)/.test(w)||/^\d+$/.test(w)||w===s||MALAS.test(w))return;(pal[w]=pal[w]||new Set()).add(m.u)})});
+  const temas=Object.entries(pal).map(([w,u])=>[w,u.size]).filter(x=>x[1]>=3).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+  const crec=(datos[s]||{}).crec||0, fiable=cl(rec.length/15);
+  const f={calor:cl((calor-1)/2.5)*fiable,gente:cl((u30/Math.max(ubase,1)-1)/1.5)*fiable,reacc:cl((reacc-reaccBase)/0.35)*fiable,unanim:cl((unanim-0.12)/0.4),eventos:cl(evPeso/8),crec:cl(crec/0.2)};
+  const momento=0.28*f.calor+0.17*f.gente+0.2*f.reacc+0.15*f.unanim+0.1*f.eventos+0.1*f.crec;
+  return {r30,base,calor,u30,reacc,frase,subs,raid,bits,temas,crec,f,momento}}
+function actualizarAnalisis(){for(const s in chat){const c=chat[s],a=analizar(s);if(!a)continue;c.a=a;c.ema=c.ema==null?a.momento:0.55*c.ema+0.45*a.momento}}
+function ritmo(s){return (chat[s]&&chat[s].a)||{r30:0,base:0,calor:1,u30:0,reacc:0,frase:'',subs:0,raid:null,bits:0,temas:[],crec:0,f:{},momento:0}}
+function momento(s){return (chat[s]&&chat[s].ema)||0}
+function puntos(s){const d=datos[s]||{};if(!d.vivo)return -1;const v=d.espectadores||0;const aud=cl((Math.log10(v+10)-2.7)/2.3);return (0.4*aud+0.6*momento(s))*(v<800?0.6:1)}
+function barritas(m){const k=1+Math.round(cl(m/0.6)*4);return `<span class="calor${m<0.15?' fria':''}" title="Momento ${Math.round(m*100)}/100">${[1,2,3,4,5].map(i=>`<i class="${i<=k?'on':''}"></i>`).join('')}</span>`}
+function frasechat(s){return ritmo(s).frase||''}
+/* Razones legibles de por qué un directo está interesante ahora */
+function razones(s){const a=ritmo(s),f=a.f||{},r=[];
+  if(a.raid)r.push(`raid de ${a.raid.de||'otro canal'} con ${fmt(a.raid.n)} personas`);
+  if(a.frase&&f.unanim>0.2)r.push(`todo el chat grita «${a.frase}»`);
+  if(a.temas.length&&momento(s)>0.2)r.push(`se habla de ${a.temas.join(', ')}`);
+  if(f.reacc>0.3)r.push('lluvia de risas y reacciones');
+  if(f.calor>0.3)r.push(`el chat va ${coma(a.calor)} veces más rápido de lo normal`);
+  if(f.gente>0.3)r.push(`${a.u30} personas escribiendo a la vez`);
+  if(a.subs>=3)r.push(`${a.subs} subs en 2 minutos`);
+  if(a.bits>=500)r.push(`${fmt(a.bits)} bits en 2 minutos`);
+  if(a.crec>=0.08)r.push(`+${Math.round(a.crec*100)} % de espectadores en 10 min`);
+  return r}
+function razonCorta(s){return razones(s)[0]||''}
 
 /* ================= Quién está en directo (decapi.me) ================= */
 async function comprobarDirectos(){
@@ -291,7 +330,8 @@ async function comprobarDirectos(){
   await Promise.all(tw.map(async c=>{
     try{const t=(await (await fetch('https://decapi.me/twitch/viewercount/'+c,{cache:'no-store'})).text()).trim();
       const d=datos[c]=datos[c]||{};
-      if(/^\d+$/.test(t)){const nuevo=!d.vivo;d.vivo=true;d.espectadores=+t;if(nuevo||!d.categoria)d.pedirCat=true}
+      if(/^\d+$/.test(t)){const nuevo=!d.vivo;d.vivo=true;d.espectadores=+t;if(nuevo||!d.categoria)d.pedirCat=true;
+        const now=Date.now();d.hist=(d.hist||[]).filter(x=>now-x.t<900000);d.hist.push({t:now,v:+t});const old=d.hist.find(x=>now-x.t>=480000);d.crec=old&&old.v>50?(+t-old.v)/old.v:0}
       else if(/offline/i.test(t)){d.vivo=false;d.espectadores=0}
     }catch(e){}
   }));
@@ -305,20 +345,31 @@ async function comprobarDirectos(){
 
 /* ================= Chat de Twitch (lectura anónima) ================= */
 let ws=null, unidos=new Set();
+function etiquetas(t){const o={};if(t)t.split(';').forEach(p=>{const i=p.indexOf('=');o[p.slice(0,i)]=p.slice(i+1)});return o}
 function conectarChats(){
   const quiero=CANALES.filter(c=>esTwitch(c.id)&&vivo(c.id)).sort((a,b)=>(datos[b.id].espectadores||0)-(datos[a.id].espectadores||0)).slice(0,CHAT_MAX).map(c=>c.id);
   if(!ws||ws.readyState>1){
     ws=new WebSocket('wss://irc-ws.chat.twitch.tv:443'); unidos=new Set();
-    ws.onopen=()=>{ws.send('PASS SCHMOOPIIE');ws.send('NICK justinfan'+Math.floor(Math.random()*80000+10000));sincronizar(quiero)};
+    ws.onopen=()=>{ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');ws.send('PASS SCHMOOPIIE');ws.send('NICK justinfan'+Math.floor(Math.random()*80000+10000));sincronizar(quiero)};
     ws.onmessage=e=>{for(const l of e.data.split('\r\n')){if(!l)continue;if(l.startsWith('PING')){ws.send('PONG :tmi.twitch.tv');continue}
-      const m=l.match(/PRIVMSG #(\S+) :(.*)$/);if(!m)continue;const c=chat[m[1]]=chat[m[1]]||{t:[],ult:[],desde:Date.now()};c.t.push(Date.now());c.ult.push({t:Date.now(),x:m[2]});if(c.ult.length>120)c.ult.splice(0,40)}};
+      const now=Date.now(), m=l.match(/^(?:@(\S+) )?:(\w+)!\S+ PRIVMSG #(\S+) :(.*)$/);
+      if(m){const c=chat[m[3]];if(!c)continue;const x=m[4].replace(/^\x01ACTION |\x01$/g,''),lx=x.trim().toLowerCase(),tg=etiquetas(m[1]);
+        const r=REACC.test(lx)||(lx.length>0&&lx.length<=14&&/^(.)\1+$/.test(lx.replace(/\s/g,'')));
+        let k=x.trim().toUpperCase().replace(/(.)\1{3,}/g,'$1$1$1').slice(0,28);if(k.length<2)k='';
+        c.m.push({t:now,u:m[2],x,r,k});if(c.m.length>4000)c.m.splice(0,1000);
+        if(tg.bits)c.ev.push({t:now,k:'bits',n:+tg.bits,w:+tg.bits/300});continue}
+      const u=l.match(/^@(\S+) :tmi\.twitch\.tv USERNOTICE #(\S+)/);
+      if(u){const c=chat[u[2]];if(!c)continue;const tg=etiquetas(u[1]),id=tg['msg-id'];
+        if(id==='sub'||id==='resub'||id==='subgift')c.ev.push({t:now,k:'sub',n:1,w:1});
+        else if(id==='submysterygift')c.ev.push({t:now,k:'regalo',n:+tg['msg-param-mass-gift-count']||1,w:0.5});
+        else if(id==='raid'){const n=+tg['msg-param-viewerCount']||0;c.ev.push({t:now,k:'raid',n,w:2+n/300,de:(tg['msg-param-displayName']||tg['msg-param-login']||'').replace(/\\s/g,' ')})}}}};
     ws.onclose=()=>setTimeout(conectarChats,5000);
   } else if(ws.readyState===1) sincronizar(quiero);
 }
 function sincronizar(quiero){
   const entrar=quiero.filter(c=>!unidos.has(c)), salir=[...unidos].filter(c=>!quiero.includes(c));
   if(salir.length){ws.send('PART '+salir.map(c=>'#'+c).join(','));salir.forEach(c=>{unidos.delete(c);delete chat[c]})}
-  if(entrar.length){ws.send('JOIN '+entrar.map(c=>'#'+c).join(','));entrar.forEach(c=>{unidos.add(c);chat[c]=chat[c]||{t:[],ult:[],desde:Date.now()}})}
+  if(entrar.length){ws.send('JOIN '+entrar.map(c=>'#'+c).join(','));entrar.forEach(c=>{unidos.add(c);chat[c]=chat[c]||nuevoChat()})}
 }
 
 /* ================= Reproductores ================= */
@@ -365,10 +416,9 @@ function decidirZona(){
   const cur=enZona, pc=vivo(cur)&&!esTV(cur)?puntos(cur):-1, pb=puntos(best), seg=(Date.now()-ultimoCambio)/1000;
   if(pc<0) return cambiarZona(best);
   if(seg>=PERMANENCIA_MIN && pb>pc*1.18) return cambiarZona(best);
-  if(seg>=60 && ritmo(best).calor>=3.2 && pb>pc) return cambiarZona(best);
+  if(seg>=60 && momento(best)>=0.5 && pb>pc*1.05) return cambiarZona(best);
 }
-function motivo(s){const d=datos[s]||{},r=ritmo(s);const partes=[];if(d.espectadores)partes.push(fmt(d.espectadores)+' espectadores');
-  if(r.calor>=1.8)partes.push(`el chat va ${r.calor.toFixed(1).replace('.',',')} veces más rápido de lo normal`);const f=frasechat(s);if(f)partes.push(`el chat grita «${f}»`);return partes.join(' · ')}
+function motivo(s){const d=datos[s]||{};const p=razones(s);if(d.espectadores)p.push(fmt(d.espectadores)+' espectadores');return p.join(' · ')}
 function cambiarZona(s){
   const c=$('#cort');if(c){$('#cortNom').textContent=nombre(s);$('#cortPor').textContent=categoria(s);c.classList.add('si');setTimeout(()=>c.classList.remove('si'),2600)}
   setTimeout(()=>{enZona=s;ultimoCambio=Date.now();poner(0,s)},900);
@@ -378,11 +428,12 @@ function cambiarZona(s){
 const ultimoAviso={};
 function buscarMomentos(){
   if(!avisos)return;
-  for(const c of CANALES){const s=c.id;if(!esTwitch(s)||!vivo(s)||tiles.some(t=>t.src===s))continue;
-    const r=ritmo(s);if(r.calor<3||r.r30<0.7)continue;if(ultimoAviso[s]&&Date.now()-ultimoAviso[s]<600000)continue;
-    if(modo==='zona'&&(Date.now()-ultimoCambio)/1000>=60&&puntos(s)>puntos(enZona)){decidirZona();return}
-    ultimoAviso[s]=Date.now();const f=frasechat(s);
-    encolar({id:s+'-'+Date.now(),canal:s,tema:`Se está liando con ${nombre(s)}`,resumen:[categoria(s),f?`el chat grita «${f}»`:`chat ${r.calor.toFixed(1).replace('.',',')} veces más rápido`].join(' · ')});return}
+  const cand=CANALES.map(c=>c.id).filter(s=>esTwitch(s)&&vivo(s)&&!tiles.some(t=>t.src===s)&&momento(s)>=0.45&&ritmo(s).r30>=0.5&&!(ultimoAviso[s]&&Date.now()-ultimoAviso[s]<600000)).sort((a,b)=>momento(b)-momento(a));
+  const s=cand[0];if(!s)return;
+  if(modo==='zona'&&(Date.now()-ultimoCambio)/1000>=60&&puntos(s)>puntos(enZona)*1.05){decidirZona();return}
+  ultimoAviso[s]=Date.now();const a=ritmo(s);
+  const tema=a.raid?`Raid a ${nombre(s)}`:a.frase&&(a.f.unanim||0)>0.2?`${nombre(s)}: el chat grita «${a.frase}»`:a.temas.length?`${nombre(s)}: se habla de ${a.temas[0]}`:`Se está liando con ${nombre(s)}`;
+  encolar({id:s+'-'+Date.now(),canal:s,tema,resumen:[categoria(s),...razones(s).slice(0,2)].join(' · ')});
 }
 function encolar(m){if(vistos.has(m.id))return;vistos.add(m.id);if(!m.urgente&&tiles.some(t=>t.src===m.canal))return;m.urgente?cola.unshift(m):cola.push(m);if(!actual)siguiente()}
 function siguiente(){actual=cola.shift();if(!actual)return;const m=actual,p=$('#previo');
@@ -407,19 +458,19 @@ function pintarMonitores(){tiles.forEach((t,i)=>{t.el.classList.toggle('antena',
   let o=t.el.querySelector('.oir');if(modo==='multi'&&i!==sel){if(!o){o=document.createElement('button');o.className='oir';o.textContent='Escuchar este';o.onclick=()=>{sel=i;tiles.forEach((_,j)=>silenciar(j,j!==sel));pintarTodo()};t.el.appendChild(o)}}else o?.remove()})}
 function pintarBarra(){
   const s=tiles[sel]?.src||portadaSrc;if(!s)return;const d=datos[s]||{};
-  const meta=[vivo(s)&&!esTV(s)?`<span class="sello">En directo</span>`:'',`<span>${categoria(s)}</span>`,d.espectadores?`<span><b>${fmt(d.espectadores)}</b> viendo</span>`:'',esTwitch(s)&&chat[s]?`<span>Chat ${barritas(ritmo(s).calor)}</span>`:''].filter(Boolean).join('');
+  const meta=[vivo(s)&&!esTV(s)?`<span class="sello">En directo</span>`:'',`<span>${categoria(s)}</span>`,d.espectadores?`<span><b>${fmt(d.espectadores)}</b> viendo</span>`:'',esTwitch(s)&&chat[s]?`<span>Chat ${barritas(momento(s))}</span>`:''].filter(Boolean).join('');
   const acc=(sonido||!arrancado?'':`<button class="boton prim" id="bSonido">Activar sonido</button>`)+(modo==='zona'?`<button class="boton" id="bQuedar">Quedarme en este directo</button>`:`<button class="boton prim" id="bZona">Volver al Canal La Zona</button>`);
   $('#barra').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><div class="meta">${meta}</div></div><div class="acciones">${acc}</div>`;
   $('#bQuedar')?.addEventListener('click',()=>{store.set('tiles',[s]);ponerModo('uno')});
   $('#bZona')?.addEventListener('click',()=>ponerModo('zona'));
   $('#bSonido')?.addEventListener('click',activarSonido);
   const por=$('#porque');
-  if(modo==='zona'){por.hidden=false;const m=motivo(s);por.innerHTML=esTV(s)?'Ahora mismo hay poco en directo, así que el Canal La Zona pone las noticias 24 horas. En cuanto empiece algo fuerte, cambia solo.':`<b>Por qué estás viendo esto:</b> es el directo con más tirón ahora mismo${m?' · '+m:''}. El Canal La Zona cambia solo cuando otro directo se pone más interesante.`}
+  if(modo==='zona'){por.hidden=false;const m=motivo(s);por.innerHTML=esTV(s)?'Ahora mismo hay poco en directo, así que el Canal La Zona pone las noticias 24 horas. En cuanto empiece algo fuerte, cambia solo.':`<b>Por qué estás viendo esto:</b> es lo más interesante ahora mismo${m?' · '+m:''}. El Canal La Zona cambia solo cuando otro directo se pone más interesante.`}
   else por.hidden=true;
 }
 function pintarRanking(){
   const top=mejores().slice(0,7);
-  $('#ranking').innerHTML=top.length?top.map((s,i)=>{const d=datos[s];return `<button class="fila" data-src="${s}" ${tiles.some(t=>t.src===s)?'aria-current="true"':''}><span class="pos">${i+1}</span>${avatar(s)}<span style="min-width:0"><span class="nom">${nombre(s)}</span><span class="cat">${categoria(s)}</span></span><span class="dato">${fmt(d.espectadores||0)}<small>${barritas(ritmo(s).calor)}</small></span></button>`}).join('')
+  $('#ranking').innerHTML=top.length?top.map((s,i)=>{const d=datos[s];return `<button class="fila" data-src="${s}" ${tiles.some(t=>t.src===s)?'aria-current="true"':''}><span class="pos">${i+1}</span>${avatar(s)}<span style="min-width:0"><span class="nom">${nombre(s)}</span><span class="cat">${momento(s)>=0.3&&razonCorta(s)?'🔥 '+razonCorta(s):categoria(s)}</span></span><span class="dato">${fmt(d.espectadores||0)}<small>${barritas(momento(s))}</small></span></button>`}).join('')
     :`<div class="vacio">Ahora mismo no hay ningún directo grande. Te avisamos en cuanto empiece alguien.</div>`;
   $('#ranking').querySelectorAll('.fila').forEach(b=>b.onclick=()=>verDirecto(b.dataset.src));
 }
@@ -433,7 +484,7 @@ function pintarRejilla(){
   $('#resumen').textContent=nv?`${nv} directos en marcha ahora · toca uno para verlo`:'Ahora mismo hay muy poco en directo · el Canal La Zona te pone las noticias';
   $('#rejilla').innerHTML=lista.map(c=>{const s=c.id,d=datos[s]||{},r=ritmo(s),v=vivo(s);
     return `<button class="tarjeta${v||esKick(s)?'':' apagada'}" data-src="${s}"><div class="mini">${miniatura(s)||`<div class="sin">${esTV(s)?'24 h':esKick(s)?'KICK':'Sin directo'}</div>`}
-      ${v&&!esTV(s)?`<span class="sello">En directo</span><span class="viendo">${fmt(d.espectadores||0)}</span>`:''}${v&&r.calor>=2?`<span class="fuego">Chat ×${r.calor.toFixed(1).replace('.',',')}</span>`:''}</div>
+      ${v&&!esTV(s)?`<span class="sello">En directo</span><span class="viendo">${fmt(d.espectadores||0)}</span>`:''}${v&&momento(s)>=0.3&&razonCorta(s)?`<span class="fuego">${razonCorta(s)}</span>`:''}</div>
       <div class="info">${avatar(s)}<div style="min-width:0"><b>${c.n}</b><span>${categoria(s)}</span></div></div></button>`}).join('')||`<div class="vacio">Aquí no hay nadie en directo ahora mismo.</div>`;
   $('#rejilla').querySelectorAll('.tarjeta').forEach(b=>b.onclick=()=>verDirecto(b.dataset.src));
 }
@@ -465,7 +516,7 @@ async function leerEstado(){try{const e=await (await fetch('estado.json?t='+Date
   if(new URLSearchParams(location.search).has('demo')){const s=mejores()[1]||'ibai';setTimeout(()=>encolar({id:'demo',canal:s,tema:`Se está liando con ${nombre(s)}`,resumen:categoria(s)+' · el chat grita «NOOOO»'}),2500)}
   leerEstado();
   setInterval(comprobarDirectos,90000);
-  setInterval(()=>{decidirZona();buscarMomentos();pintarBarra();pintarRanking()},10000);
+  setInterval(()=>{actualizarAnalisis();decidirZona();buscarMomentos();pintarBarra();pintarRanking()},10000);
   setInterval(pintarRejilla,30000);
   setInterval(leerEstado,20000);
 })();
