@@ -278,11 +278,12 @@ function categoria(s){if(esTV(s))return canal(s).sub;const d=datos[s]||{};if(!d.
    Señales del chat en los últimos 30 s frente a lo normal en ese mismo canal (5 min):
    ritmo de mensajes, personas distintas escribiendo, reacciones (risas, NOOO, ???),
    todo el chat repitiendo lo mismo, subs/bits/raids y espectadores que llegan. */
-const STOP=new Set(('que del los las por con para una uno unos unas como pero mas muy este esta esto eso ese esa son ser hay tiene tienen estoy estan todo todos toda nada algo porque cuando donde quien cual vaya pues bueno vale hola gracias buenas tarde tardes noches noche dias chat stream directo hermano bro tio men mano wey tambien solo ahora aqui alli asi sus les nos ver hace hacer eres soy fue era van vas voy dice dijo the and you this that what puto puta joder hostia madre mierda verdad igual tengo tiene tenia sabe saber cosa cosas mejor peor otro otra otros mismo mucho mucha poco siempre nunca hasta desde entre sobre luego antes despues jajaja jajajaja xddd chavales gente mira mirad quiero quieres puede puedo creo dale').split(' '));
+const STOP=new Set(('que del los las por con para una uno unos unas como pero mas muy este esta esto eso ese esa son ser hay tiene tienen estoy estan todo todos toda nada algo porque cuando donde quien cual vaya pues bueno vale hola gracias buenas tarde tardes noches noche dias chat stream directo hermano bro tio men mano wey tambien solo ahora aqui alli asi sus les nos ver hace hacer eres soy fue era van vas voy dice dijo the and you this that what puto puta joder hostia madre mierda verdad igual tengo tiene tenia sabe saber cosa cosas mejor peor otro otra otros mismo mucho mucha poco siempre nunca hasta desde entre sobre luego antes despues jajaja jajajaja xddd chavales gente mira mirad quiero quieres queremos quereis puede puedo creo dale chate chatt vamos venga oye literal real tremendo xdd').split(' '));
 const REACC=/^(?:(?:ja|je|ji|js|ks|ka)+j?|x+d+|k+e+k+w*|lu+l|omegalul|lmao+|icant|pog\w*|wtf+|no+|si+|f|w|l|\?+|!+|\+1|\+2|monkas|pepelaugh|kappa|ez+|gg+|lets+ ?go+|vamo+s*|madre mia|que+ ?pasa+|ostia+|hostia+|bruh)$|[😂🤣💀😭🔥😱]/i;
 const MALAS=/(sex|porn|teta|culo|follar|nud|put[ao]|maric|negr|mierd|subnorm|retras|zorr|polla|coñ|http|sudaca|panchit)/i;
 const cl=x=>Math.max(0,Math.min(1,x));
 const coma=x=>x.toFixed(1).replace('.',',');
+function parecido(w,s){const a=s.replace(/^kick:/,'').replace(/[^a-z]/g,''),b=nombre(s).toLowerCase().normalize('NFD').replace(/[^a-z]/g,'');return [a,b].some(x=>x.length>=4&&(x.includes(w.slice(0,4))||w.includes(x.slice(0,4))))}
 function nuevoChat(){return {m:[],ev:[],desde:Date.now(),a:null,ema:null}}
 function analizar(s){const c=chat[s];if(!c)return null;const now=Date.now();
   c.m=c.m.filter(m=>now-m.t<300000);c.ev=c.ev.filter(e=>now-e.t<300000);
@@ -298,8 +299,8 @@ function analizar(s){const c=chat[s];if(!c)return null;const now=Date.now();
   const frase=top&&top[1]>=4&&!MALAS.test(top[0])?top[0]:'';
   const ev2=c.ev.filter(e=>now-e.t<120000), evPeso=ev2.reduce((a,e)=>a+e.w,0);
   const subs=ev2.filter(e=>e.k==='sub').reduce((a,e)=>a+e.n,0), raid=ev2.filter(e=>e.k==='raid').pop()||null, bits=ev2.filter(e=>e.k==='bits').reduce((a,e)=>a+e.n,0);
-  const pal={};c.m.filter(m=>now-m.t<60000&&!m.r).forEach(m=>{new Set(m.x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').match(/[a-zñ0-9]{4,}/g)||[]).forEach(w=>{if(STOP.has(w)||/^(ja|je|xd|js|kek)/.test(w)||/^\d+$/.test(w)||w===s||MALAS.test(w))return;(pal[w]=pal[w]||new Set()).add(m.u)})});
-  const temas=Object.entries(pal).map(([w,u])=>[w,u.size]).filter(x=>x[1]>=3).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+  const pal={};c.m.filter(m=>now-m.t<60000&&!m.r).forEach(m=>{new Set(m.x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').match(/[a-zñ0-9]{4,}/g)||[]).forEach(w=>{if(STOP.has(w)||/^(ja|je|xd|js|kek)/.test(w)||/^\d+$/.test(w)||w===s||MALAS.test(w)||parecido(w,s))return;(pal[w]=pal[w]||new Set()).add(m.u)})});
+  const temas=Object.entries(pal).map(([w,u])=>[w,u.size]).filter(x=>x[1]>=4).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
   const crec=(datos[s]||{}).crec||0, fiable=cl(rec.length/15);
   const f={calor:cl((calor-1)/2.5)*fiable,gente:cl((u30/Math.max(ubase,1)-1)/1.5)*fiable,reacc:cl((reacc-reaccBase)/0.35)*fiable,unanim:cl((unanim-0.12)/0.4),eventos:cl(evPeso/8),crec:cl(crec/0.2)};
   const momento=0.28*f.calor+0.17*f.gente+0.2*f.reacc+0.15*f.unanim+0.1*f.eventos+0.1*f.crec;
@@ -314,7 +315,7 @@ function frasechat(s){return ritmo(s).frase||''}
 function razones(s){const a=ritmo(s),f=a.f||{},r=[];
   if(a.raid)r.push(`raid de ${a.raid.de||'otro canal'} con ${fmt(a.raid.n)} personas`);
   if(a.frase&&f.unanim>0.2)r.push(`todo el chat grita «${a.frase}»`);
-  if(a.temas.length&&momento(s)>0.2)r.push(`se habla de ${a.temas.join(', ')}`);
+  if(a.temas.length&&momento(s)>0.3)r.push(`se habla de ${a.temas.join(', ')}`);
   if(f.reacc>0.3)r.push('lluvia de risas y reacciones');
   if(f.calor>0.3)r.push(`el chat va ${coma(a.calor)} veces más rápido de lo normal`);
   if(f.gente>0.3)r.push(`${a.u30} personas escribiendo a la vez`);
