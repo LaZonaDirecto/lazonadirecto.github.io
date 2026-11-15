@@ -350,7 +350,7 @@ function layout(nuevo){
   const prev=tiles.map(t=>t.src);
   n=nuevo; $('#monitores').className='monitores n'+n;
   document.querySelectorAll('.vistas button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n===n));
-  const base=prev.length?prev:store.get('tiles',null)||[];
+  const base=prev.length?prev:(store.get('tiles',null)||[]).filter(s=>live.has(s)||!esTwitch(s)||!live.size);
   const lista=[...new Set([...base,...candidatos()])].slice(0,n);
   $('#monitores').innerHTML='';tiles=[];if(sel>=n)sel=0;
   lista.forEach((src,i)=>{const el=document.createElement('div');el.className='monitor';$('#monitores').appendChild(el);
@@ -440,6 +440,23 @@ async function leerEstado(){
   }catch(err){}
 }
 
+/* ================= Quién está en directo (sin motor) =================
+   Pregunta a decapi.me si cada canal de Twitch está en directo y a qué juega. */
+async function comprobarDirectos(){
+  const tw=CANALES.filter(c=>esTwitch(c.id)).map(c=>c.id);
+  const res=await Promise.all(tw.map(async c=>{
+    try{const t=await (await fetch('https://decapi.me/twitch/uptime/'+c,{cache:'no-store'})).text();
+      return [c,!/offline|error|not found/i.test(t)]}catch(e){return [c,null]}
+  }));
+  for(const [c,v] of res){ if(v===true) live.add(c); else if(v===false) live.delete(c); }
+  const vivos=res.filter(r=>r[1]).map(r=>r[0]);
+  await Promise.all(vivos.map(async c=>{
+    try{const g=(await (await fetch('https://decapi.me/twitch/game/'+c,{cache:'no-store'})).text()).trim();
+      if(g&&!/error/i.test(g)) info[c]={...(info[c]||{}),categoria:g==='Just Chatting'?'Charlando':g}}catch(e){}
+  }));
+  pintarLista();
+}
+
 /* ================= Controles ================= */
 document.querySelectorAll('.vistas button').forEach(b=>b.onclick=()=>{tocado=true;layout(+b.dataset.n)});
 function pintarAvisos(){const b=$('#avisos');b.setAttribute('aria-pressed',avisos);b.querySelector('.txt').textContent=avisos?'Avisos activados':'Avisos desactivados'}
@@ -455,7 +472,9 @@ $('#probar').onclick=()=>{
 };
 
 /* ================= Arranque ================= */
-pintarAvisos(); sector='ahora'; layout(store.get('n',1)); leerEstado(); setInterval(leerEstado,POLL_MS);
+pintarAvisos(); sector='ahora';
+(async()=>{ await Promise.race([comprobarDirectos(), new Promise(r=>setTimeout(r,3500))]); layout(store.get('n',1)); leerEstado(); })();
+setInterval(leerEstado,POLL_MS); setInterval(comprobarDirectos,3*60*1000);
 setInterval(pintarSectores,10*60*1000);
 </script>
 </body>
