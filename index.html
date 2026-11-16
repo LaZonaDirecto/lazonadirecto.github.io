@@ -317,7 +317,7 @@ function momento(s){return (chat[s]&&chat[s].ema)||0}
 function puntos(s){const d=datos[s]||{};if(!d.vivo)return -1;const v=d.espectadores||0;const aud=cl((Math.log10(v+10)-2.7)/2.3);return (0.6*aud+0.4*momento(s))*(v<800?0.6:1)}
 /* Canal GTA: mismo motor que el Canal La Zona, pero solo con directos de GTA */
 const esGTA=s=>vivo(s)&&!esTV(s)&&/grand theft auto|\bgta\b/i.test(((datos[s]||{}).categoria||'')+' '+((datos[s]||{}).titulo||''));
-const auto=()=>auto()||modo==='gta';
+const auto=()=>modo==='zona'||modo==='gta';
 const nombreCanal=()=>modo==='gta'?'Canal GTA':'Canal La Zona';
 function pool(){const m=mejores();if(modo!=='gta')return m;const g=m.filter(esGTA);return g.length?g:m}
 /* El Canal La Zona solo salta a directos de un tamaño parecido: al menos 2.000 espectadores y un 30 % del que estás viendo */
