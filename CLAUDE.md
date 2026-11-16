@@ -4,7 +4,8 @@ Web multiview de directos en español: https://lazonadirecto.github.io (GitHub P
 El dueño es Aka Rikk. Habla en español: responde y escribe todo (código, comentarios, textos de la web) en español de España.
 
 ## Cómo funciona (versión actual)
-- Tres modos: **Canal La Zona** (automático: pone lo más interesante y cambia solo; permanencia mínima 150 s, cambia si otro supera ×1,18 en puntos, o tras 60 s si otro tiene momento ≥ 0,5), **Elegir directo** y **Multivista** (2 o 4).
+- **Canal GTA** (desde 16-11-2026, para el lanzamiento de GTA VI el 19-11): mismo motor que el Canal La Zona pero solo con directos cuya categoría o título es GTA (`esGTA`). Si no hay nadie jugando, pone lo mejor del momento y lo dice. Enlace directo: `?canal=gta`. También hay filtro «GTA» en la rejilla.
+- Modos: **Canal La Zona** (automático: pone lo más interesante y cambia solo; permanencia mínima 150 s, cambia si otro supera ×1,18 en puntos, o tras 60 s si otro tiene momento ≥ 0,5), **Elegir directo** y **Multivista** (2 o 4).
 - Puntos = 0,6 × audiencia (log de espectadores, 0–1) + 0,4 × **momento** (media suavizada cada 10 s). Por debajo de 800 espectadores, ×0,6.
 - Saltos sin bajones de público: el Canal La Zona solo cambia a directos con ≥ 2.000 espectadores y ≥ 30 % de los del que suena (de IlloJuan a Rubius sí, a un canal pequeño no). Los pequeños con un buen momento salen como aviso opcional.
 - Antes de cada cambio automático sale la tarjeta verde 12 s: «Cambiar ya» / «Quedarme con X». Si se queda, no vuelve a proponer ese canal en 10 min y espera otros 150 s. `?demozona` lo prueba.
