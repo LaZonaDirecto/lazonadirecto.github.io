@@ -391,7 +391,7 @@ function conectarChats(){
       const now=Date.now(), m=l.match(/^(?:@(\S+) )?:(\w+)!\S+ PRIVMSG #(\S+) :(.*)$/);
       if(m){const c=chat[m[3]];if(!c)continue;const x=m[4].replace(/^\x01ACTION |\x01$/g,''),lx=x.trim().toLowerCase(),tg=etiquetas(m[1]);
         const r=REACC.test(lx)||(lx.length>0&&lx.length<=14&&/^(.)\1+$/.test(lx.replace(/\s/g,'')));
-        let k=x.trim().toUpperCase().replace(/(.)\1{3,}/g,'$1$1$1').slice(0,28);if(k.length<2)k='';
+        let k=x.trim().toUpperCase().replace(/(.)\1{3,}/g,'$1$1$1').slice(0,28);if(k.length<2||/^[!\/]/.test(k))k='';
         c.m.push({t:now,u:m[2],x,r,k});if(c.m.length>4000)c.m.splice(0,1000);
         if(tg.bits)c.ev.push({t:now,k:'bits',n:+tg.bits,w:+tg.bits/300});continue}
       const u=l.match(/^@(\S+) :tmi\.twitch\.tv USERNOTICE #(\S+)/);
