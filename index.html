@@ -342,7 +342,7 @@ let infoMotor={};
 function limpiarTitulo(t){if(!t)return '';
   t=t.replace(/https?:\/\/\S+/g,'').replace(/![\wñ]+/gi,'').replace(/#[\wñáéíóú]+/gi,'').replace(/@[\w]+/g,'')
    .replace(/\[(?:es|esp|spa|en|eng|drops?\s*on)\]/gi,'').replace(/\b(drops?\s+(activ\w+|on)|patrocinado|sponsored|ad)\b/gi,'')
-   .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{203C}\u{2049}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu,'').replace(/\s*[|│/·•-]+\s*$/,'').replace(/^\s*[|│/·•-]+\s*/,'')
+   .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{203C}\u{2049}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu,' ').replace(/\s*[|│/·•-]+\s*$/,'').replace(/^\s*[|│/·•-]+\s*/,'')
    .replace(/\s*[|│]\s*/g,' · ').replace(/\s{2,}/g,' ').trim();
   if(t===t.toUpperCase()&&/[A-ZÑ]{4}/.test(t)){const SIG=/^(GTA|RP|LOL|TFT|FIFA|FC|NBA|NFL|UFC|IRL|CS2?|PC|PS5|IA|ESP|LEC|LVP|MVP|TOP|VS|DJ|TV|F1|WOW|GOTY)$/;t=t.split(' ').map((w,i)=>SIG.test(w.replace(/[^A-Z0-9Ñ]/g,''))?w:(i?w.toLowerCase():w.charAt(0)+w.slice(1).toLowerCase())).join(' ')}
   if(t.length>78){t=t.slice(0,78);t=t.slice(0,t.lastIndexOf(' ')>40?t.lastIndexOf(' '):78)+'…'}
