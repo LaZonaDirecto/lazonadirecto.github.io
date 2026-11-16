@@ -134,6 +134,10 @@ img{display:block}
 .tarjeta .info .av{width:36px;height:36px;font-size:13px}
 .tarjeta .info b{display:block;font-weight:800}
 .tarjeta .info div span{display:block;color:var(--suave);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.tarjeta .info .ahora{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:none;color:var(--texto,#E8ECFF);font-size:12.5px;line-height:1.35;margin-top:3px}
+.tarjeta .info{align-items:flex-start}
+.ahora-barra{display:block;margin-top:6px;font-size:14px;color:var(--suave);max-width:640px;line-height:1.4}
+.ahora-barra b,.tarjeta .info .ahora b{color:#19E3A0;font-weight:800}
 .tarjeta.apagada{opacity:.55}
 .tarjeta.apagada:hover{opacity:.85}
 
@@ -326,6 +330,24 @@ function razones(s){const a=ritmo(s),f=a.f||{},r=[];
   if(a.crec>=0.08)r.push(`+${Math.round(a.crec*100)} % de espectadores en 10 min`);
   return r}
 function razonCorta(s){return razones(s)[0]||''}
+/* Qué se hace o se habla AHORA en cada directo (descripción muy corta para decidir si entrar) */
+let infoMotor={};
+function limpiarTitulo(t){if(!t)return '';
+  t=t.replace(/https?:\/\/\S+/g,'').replace(/![\wñ]+/gi,'').replace(/#[\wñáéíóú]+/gi,'').replace(/@[\w]+/g,'')
+   .replace(/\[(?:es|esp|spa|en|eng|drops?\s*on)\]/gi,'').replace(/\b(drops?\s+(activ\w+|on)|patrocinado|sponsored|ad)\b/gi,'')
+   .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{203C}\u{2049}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu,'').replace(/\s*[|│/·•-]+\s*$/,'').replace(/^\s*[|│/·•-]+\s*/,'')
+   .replace(/\s*[|│]\s*/g,' · ').replace(/\s{2,}/g,' ').trim();
+  if(t===t.toUpperCase()&&/[A-ZÑ]{4}/.test(t)){const SIG=/^(GTA|RP|LOL|TFT|FIFA|FC|NBA|NFL|UFC|IRL|CS2?|PC|PS5|IA|ESP|LEC|LVP|MVP|TOP|VS|DJ|TV|F1|WOW|GOTY)$/;t=t.split(' ').map((w,i)=>SIG.test(w.replace(/[^A-Z0-9Ñ]/g,''))?w:(i?w.toLowerCase():w.charAt(0)+w.slice(1).toLowerCase())).join(' ')}
+  if(t.length>78){t=t.slice(0,78);t=t.slice(0,t.lastIndexOf(' ')>40?t.lastIndexOf(' '):78)+'…'}
+  return t}
+function ahora(s){if(esTV(s))return '';const d=datos[s]||{};if(!vivo(s))return '';
+  const m=infoMotor[s]&&infoMotor[s].resumen;if(m)return m;           // titular del motor (transcripción + Claude), si existe
+  const a=ritmo(s),tit=limpiarTitulo(d.titulo);
+  const chat=a.temas&&a.temas.length&&momento(s)>0.12?`En el chat: ${a.temas.slice(0,2).join(', ')}`:'';
+  return [tit,chat].filter(Boolean).join(' · ')}
+const escH=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function ahoraHTML(s){const t=ahora(s);if(!t)return '';const esc=t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  return esc.replace(/^En el chat:/,'<b>En el chat:</b>').replace(/ · En el chat:/,' · <b>En el chat:</b>')}
 
 /* ================= Quién está en directo (decapi.me) ================= */
 async function comprobarDirectos(){
@@ -342,6 +364,10 @@ async function comprobarDirectos(){
   await Promise.all(tw.filter(c=>datos[c]&&datos[c].vivo&&(datos[c].pedirCat||!datos[c].catHora||Date.now()-datos[c].catHora>600000)).map(async c=>{
     try{const g=(await (await fetch('https://decapi.me/twitch/game/'+c,{cache:'no-store'})).text()).trim();
       if(g&&!/error|offline/i.test(g)){datos[c].categoria=g==='Just Chatting'?'Charlando':g;datos[c].catHora=Date.now();datos[c].pedirCat=false}}catch(e){}
+  }));
+  await Promise.all(tw.filter(c=>datos[c]&&datos[c].vivo&&(!datos[c].titHora||Date.now()-datos[c].titHora>170000)).map(async c=>{
+    try{const t=(await (await fetch('https://decapi.me/twitch/title/'+c,{cache:'no-store'})).text()).trim();
+      if(t&&!/^(error|user not found|\[error)/i.test(t)){datos[c].titulo=t;datos[c].titHora=Date.now()}}catch(e){}
   }));
   pintarTodo();
 }
@@ -442,7 +468,7 @@ function buscarMomentos(){
   if(modo==='zona'&&(Date.now()-ultimoCambio)/1000>=60&&puntos(s)>puntos(enZona)*1.05){decidirZona();return}
   ultimoAviso[s]=Date.now();const a=ritmo(s);
   const tema=a.raid?`Raid a ${nombre(s)}`:a.frase&&(a.f.unanim||0)>0.2?`${nombre(s)}: el chat grita «${a.frase}»`:a.temas.length?`${nombre(s)}: se habla de ${a.temas[0]}`:`Se está liando con ${nombre(s)}`;
-  encolar({id:s+'-'+Date.now(),canal:s,tema,resumen:[categoria(s),...razones(s).slice(0,2)].join(' · ')});
+  encolar({id:s+'-'+Date.now(),canal:s,tema,resumen:[categoria(s),limpiarTitulo((datos[s]||{}).titulo),...razones(s).slice(0,1)].filter(Boolean).join(' · ')});
 }
 function encolar(m){if(vistos.has(m.id))return;vistos.add(m.id);if(!m.urgente&&tiles.some(t=>t.src===m.canal))return;m.urgente?cola.unshift(m):cola.push(m);if(!actual)siguiente()}
 function siguiente(){actual=cola.shift();if(!actual)return;const m=actual,p=$('#previo');
@@ -471,7 +497,7 @@ function pintarBarra(){
   const s=tiles[sel]?.src||portadaSrc;if(!s)return;const d=datos[s]||{};
   const meta=[vivo(s)&&!esTV(s)?`<span class="sello">En directo</span>`:'',`<span>${categoria(s)}</span>`,d.espectadores?`<span><b>${fmt(d.espectadores)}</b> viendo</span>`:'',esTwitch(s)&&chat[s]?`<span>Chat ${barritas(momento(s))}</span>`:''].filter(Boolean).join('');
   const acc=(sonido||!arrancado?'':`<button class="boton prim" id="bSonido">Activar sonido</button>`)+(modo==='zona'?`<button class="boton" id="bQuedar">Quedarme en este directo</button>`:`<button class="boton prim" id="bZona">Volver al Canal La Zona</button>`);
-  $('#barra').innerHTML=`${avatar(s)}<div><h1>${nombre(s)}</h1><div class="meta">${meta}</div></div><div class="acciones">${acc}</div>`;
+  $('#barra').innerHTML=`${avatar(s)}<div style="min-width:0"><h1>${nombre(s)}</h1><div class="meta">${meta}</div>${ahora(s)?`<span class="ahora-barra">${ahoraHTML(s)}</span>`:''}</div><div class="acciones">${acc}</div>`;
   $('#bQuedar')?.addEventListener('click',()=>{store.set('tiles',[s]);ponerModo('uno')});
   $('#bZona')?.addEventListener('click',()=>ponerModo('zona'));
   $('#bSonido')?.addEventListener('click',activarSonido);
@@ -481,7 +507,7 @@ function pintarBarra(){
 }
 function pintarRanking(){
   const top=mejores().slice(0,7);
-  $('#ranking').innerHTML=top.length?top.map((s,i)=>{const d=datos[s];return `<button class="fila" data-src="${s}" ${tiles.some(t=>t.src===s)?'aria-current="true"':''}><span class="pos">${i+1}</span>${avatar(s)}<span style="min-width:0"><span class="nom">${nombre(s)}</span><span class="cat">${momento(s)>=0.3&&razonCorta(s)?'🔥 '+razonCorta(s):categoria(s)}</span></span><span class="dato">${fmt(d.espectadores||0)}<small>${barritas(momento(s))}</small></span></button>`}).join('')
+  $('#ranking').innerHTML=top.length?top.map((s,i)=>{const d=datos[s];return `<button class="fila" data-src="${s}" ${tiles.some(t=>t.src===s)?'aria-current="true"':''}><span class="pos">${i+1}</span>${avatar(s)}<span style="min-width:0"><span class="nom">${nombre(s)}</span><span class="cat" title="${(ahora(s)||'').replace(/"/g,'&quot;')}">${momento(s)>=0.3&&razonCorta(s)?'🔥 '+razonCorta(s):(limpiarTitulo((datos[s]||{}).titulo)?categoria(s)+' · '+escH(limpiarTitulo(datos[s].titulo)):categoria(s))}</span></span><span class="dato">${fmt(d.espectadores||0)}<small>${barritas(momento(s))}</small></span></button>`}).join('')
     :`<div class="vacio">Ahora mismo no hay ningún directo grande. Te avisamos en cuanto empiece alguien.</div>`;
   $('#ranking').querySelectorAll('.fila').forEach(b=>b.onclick=()=>verDirecto(b.dataset.src));
 }
@@ -496,7 +522,7 @@ function pintarRejilla(){
   $('#rejilla').innerHTML=lista.map(c=>{const s=c.id,d=datos[s]||{},r=ritmo(s),v=vivo(s);
     return `<button class="tarjeta${v||esKick(s)?'':' apagada'}" data-src="${s}"><div class="mini">${miniatura(s)||`<div class="sin">${esTV(s)?'24 h':esKick(s)?'KICK':'Sin directo'}</div>`}
       ${v&&!esTV(s)?`<span class="sello">En directo</span><span class="viendo">${fmt(d.espectadores||0)}</span>`:''}${v&&momento(s)>=0.3&&razonCorta(s)?`<span class="fuego">${razonCorta(s)}</span>`:''}</div>
-      <div class="info">${avatar(s)}<div style="min-width:0"><b>${c.n}</b><span>${categoria(s)}</span></div></div></button>`}).join('')||`<div class="vacio">Aquí no hay nadie en directo ahora mismo.</div>`;
+      <div class="info">${avatar(s)}<div style="min-width:0"><b>${c.n}</b><span>${categoria(s)}</span>${ahora(s)?`<span class="ahora">${ahoraHTML(s)}</span>`:''}</div></div></button>`}).join('')||`<div class="vacio">Aquí no hay nadie en directo ahora mismo.</div>`;
   $('#rejilla').querySelectorAll('.tarjeta').forEach(b=>b.onclick=()=>verDirecto(b.dataset.src));
 }
 function verDirecto(s){
@@ -515,6 +541,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&actual)cerrar(false
 
 /* ================= Lo que manda el motor (estado.json) ================= */
 async function leerEstado(){try{const e=await (await fetch('estado.json?t='+Date.now(),{cache:'no-store'})).json();
+  if(e.actualizado&&e.info)infoMotor=e.info;
   (e.momentos||[]).forEach(m=>{if(!m.hora||(Date.now()-new Date(m.hora))/60000<10)encolar(m)});
   if(e.ultima_hora&&e.ultima_hora.id)encolar({...e.ultima_hora,urgente:true,tema:e.ultima_hora.titulo||'Última hora'})}catch(err){}}
 

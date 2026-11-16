@@ -13,6 +13,7 @@ El dueño es Aka Rikk. Habla en español: responde y escribe todo (código, come
 - Quién está en directo: SOLO decapi.me `/twitch/viewercount/<canal>` (número = en directo). No usar los eventos ONLINE/OFFLINE del reproductor de Twitch: fallan (marcaban a Auron en directo y a Rubius sin conexión).
 - Chat: lectura anónima por IRC (`wss://irc-ws.chat.twitch.tv`, `justinfan…`) de los 30 directos con más gente. Si un chat se dispara, aviso abajo a la derecha.
 - `?demo` en la URL saca un aviso de prueba.
+- **Qué pasa ahora en cada directo** (usuario, 16-11): cada tarjeta, la fila del ranking y la barra bajo el reproductor llevan una descripción muy corta para decidir si entrar. Orden: `info[canal].resumen` de estado.json (titular del motor con transcripción + Claude) → título del directo limpio (decapi `/twitch/title/<canal>`, cada ~3 min; sin !comandos, #, @, emojis ni mayúsculas gritadas) + «En el chat: …» con los temas del chat. Funciones `limpiarTitulo`, `ahora`, `ahoraHTML` (siempre escapar el título: viene de fuera).
 
 ## Qué es
 - El espectador ve 1, 2 o 4 directos a la vez (Twitch, Kick y YouTube) de streamers hispanohablantes.
@@ -25,7 +26,7 @@ El dueño es Aka Rikk. Habla en español: responde y escribe todo (código, come
 - `estado.json`: lo que la web lee cada 20 s. Lo escribe el motor. Esquema:
   ```json
   {"actualizado":"ISO", "en_directo":["ibai","kick:westcol"],
-   "info":{"ibai":{"categoria":"Just Chatting","titulo":"...","espectadores":0}},
+   "info":{"ibai":{"categoria":"Just Chatting","titulo":"...","espectadores":0,"resumen":"Reacciona a la gala de los Goya"}},
    "momentos":[{"id","canal","tema","resumen","categoria","multiplicador","clip","hora"}],
    "ultima_hora":null | {"id","canal":"tv:rtve24h","titulo"}}
   ```
